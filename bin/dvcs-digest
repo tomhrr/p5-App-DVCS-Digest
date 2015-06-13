@@ -5,6 +5,7 @@ use strict;
 
 use App::DVCS::Digest;
 
+use Getopt::Long;
 use YAML;
 
 sub load_config
@@ -28,11 +29,13 @@ sub main
     if ($options{'update'}) {
         $app->update();
     } elsif ($options{'send'}) {
-        $app->send($from, $to);
+        $app->send($options{'from'}, $options{'to'});
     } else {
         die "invalid options";
     }
 }
+
+main();
 
 1;
 
