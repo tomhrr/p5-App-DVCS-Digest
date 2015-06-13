@@ -33,7 +33,7 @@ sub branches
 
     my $heads_path = ".git/refs/heads";
     opendir(my $dh, $heads_path);
-    
+
     my @results;
     while (my $entry = readdir($dh)) {
         if ($entry eq '.' or $entry eq '..') {
@@ -45,7 +45,7 @@ sub branches
         chomp $commit;
         push @results, [ $entry => $commit ];
     }
-    
+
     return \@results;
 }
 
@@ -55,16 +55,16 @@ sub branch
 
     my $branch = `git rev-parse --abbrev-ref HEAD`;
     chomp $branch;
-    
+
     return $branch;
 }
 
 sub checkout
 {
     my ($self, $branch) = @_;
-    
+
     system("git checkout $branch");
-    
+
     return 1;
 }
 

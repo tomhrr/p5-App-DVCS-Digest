@@ -31,7 +31,7 @@ sub branches
 {
     my ($self) = @_;
 
-    my $current = $self->branch(); 
+    my $current = $self->branch();
     my @data = `hg branches`;
     my @results;
     for my $d (@data) {
@@ -53,16 +53,16 @@ sub branch
 
     my $branch = `hg branch`;
     chomp $branch;
-    
+
     return $branch;
 }
 
 sub checkout
 {
     my ($self, $branch) = @_;
-    
+
     system("hg checkout $branch");
-    
+
     return 1;
 }
 
