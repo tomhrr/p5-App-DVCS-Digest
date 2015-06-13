@@ -1,0 +1,39 @@
+#!/usr/bin/perl
+
+use warnings;
+use strict;
+
+use App::DVCS::Digest;
+
+use YAML;
+
+sub load_config
+{
+    my ($path) = @_;
+
+    my $config = YAML::LoadFile($path);
+    return $config;
+}
+
+sub main
+{
+    my %options;
+    GetOptions(\%options, 'conf=s', 'update', 'send', 'from', 'to');
+
+    my $config_path = $options{'conf'} || '/etc/dvcs-digest.conf';
+    my $config = load_config($config_path);
+
+    my $app = App::DVCS::Digest->new();
+
+    if ($options{'update'}) {
+        $app->update();
+    } elsif ($options{'send'}) {
+        $app->send($from, $to);
+    } else {
+        die "invalid options";
+    }
+}
+
+1;
+
+__END__
