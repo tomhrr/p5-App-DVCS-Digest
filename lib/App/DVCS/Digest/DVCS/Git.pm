@@ -9,7 +9,8 @@ sub new
 {
     my ($class) = @_;
 
-    if (not -x 'git') {
+    my $res = system("git --version >/dev/null");
+    if ($res != 0) {
         die "Unable to find git executable.";
     }
 
@@ -49,7 +50,7 @@ sub branches
     return \@results;
 }
 
-sub branch
+sub branch_name
 {
     my ($self) = @_;
 
@@ -63,7 +64,7 @@ sub checkout
 {
     my ($self, $branch) = @_;
 
-    system("git checkout $branch");
+    system("git checkout $branch >/dev/null 2>&1");
 
     return 1;
 }

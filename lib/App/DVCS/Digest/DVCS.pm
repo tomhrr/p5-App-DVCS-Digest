@@ -55,6 +55,11 @@ L<App::DVCS::Digest>.
 
 =over 4
 
+=item B<new>
+
+Constructor for the implementation.  If the implementation is not
+supported, this call should die.
+
 =item B<open_repository>
 
 Takes a repository path as its single argument.  "Opens" the

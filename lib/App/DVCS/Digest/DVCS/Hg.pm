@@ -9,7 +9,8 @@ sub new
 {
     my ($class) = @_;
 
-    if (not -x 'hg') {
+    my $res = system("hg --version >/dev/null");
+    if ($res != 0) {
         die "Unable to find hg executable.";
     }
 
@@ -31,7 +32,7 @@ sub branches
 {
     my ($self) = @_;
 
-    my $current = $self->branch();
+    my $current = $self->branch_name();
     my @data = `hg branches`;
     my @results;
     for my $d (@data) {
@@ -47,7 +48,7 @@ sub branches
     return \@results;
 }
 
-sub branch
+sub branch_name
 {
     my ($self) = @_;
 
@@ -61,7 +62,7 @@ sub checkout
 {
     my ($self, $branch) = @_;
 
-    system("hg checkout $branch");
+    system("hg checkout $branch >/dev/null 2>&1");
 
     return 1;
 }
@@ -74,7 +75,7 @@ sub commits_from
         map { chomp; $_ }
             `hg log -b $branch --template "{node}\n" -r $from:tip`;
 
-    if ($new_commits[0] eq $from) {
+    if (@new_commits and ($new_commits[0] eq $from)) {
         shift @new_commits;
     }
 
@@ -85,7 +86,7 @@ sub show
 {
     my ($self, $id) = @_;
 
-    my @data = `hg log --rev id`;
+    my @data = `hg log --rev $id`;
 
     return \@data;
 }

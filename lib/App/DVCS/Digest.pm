@@ -75,7 +75,7 @@ sub _update
         my ($name, $path, $type) = @{$repository}{qw(name path type)};
         my $impl = _impl($type);
         $impl->open_repository($path);
-        my $current_branch = $impl->branch();
+        my $current_branch = $impl->branch_name();
         my @branches = @{$impl->branches()};
         for my $branch (@branches) {
             my ($branch_name, undef) = @{$branch};
@@ -135,7 +135,7 @@ sub send_email
         my ($name, $path, $type) = @{$repository}{qw(name path type)};
         my $impl = _impl($type);
         $impl->open_repository($path);
-        my $current_branch = $impl->branch();
+        my $current_branch = $impl->branch_name();
 
         my @branches = @{$impl->branches()};
         for my $branch (@branches) {
@@ -176,8 +176,7 @@ sub send_email
     }
 
     my $email = Email::MIME->create(
-        header_str => [ From => $config->{'from'},
-                        To   => $config->{'to'} ],
+        header_str => [ %{$config->{'headers'}} ],
         parts => [
             Email::MIME->create(
                 attributes => {
