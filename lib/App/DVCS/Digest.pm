@@ -31,6 +31,18 @@ sub _impl
     return App::DVCS::Digest::DVCS::Factory->new($name);
 }
 
+sub _slurp
+{
+    my ($path) = @_;
+
+    open my $fh, '<', $path;
+    my @lines;
+    while (my $line = <$fh>) {
+        push @lines, $line;
+    }
+    return join '', @lines;
+}
+
 sub _init
 {
     my ($self) = @_;
@@ -54,7 +66,7 @@ sub _init
                 next;
             }
             open my $fh, '>', $branch_db_path;
-            print $fh "0000-00-00T00:00:00.$commit\n";
+            print $fh POSIX::strftime('%FT%T', gmtime(0)).".$commit\n";
             close $fh;
         }
     }
@@ -81,9 +93,9 @@ sub _update
             my ($branch_name, undef) = @{$branch};
             my $branch_db_path = "$db_path/$name/$branch_name";
             if (not -e $branch_db_path) {
-                next;
+                die "Unable to find branch database ($branch_db_path).";
             }
-            my ($last) = `tail -n 1 $branch_db_path`;
+            my ($last) = `tail -n 1 $branch_db_path` || '';
             chomp $last;
             my (undef, $commit) = split /\./, $last;
             if (not $commit) {
@@ -142,7 +154,7 @@ sub send_email
             my ($branch_name, $commit) = @{$branch};
             my $branch_db_path = "$db_path/$name/$branch_name";
             if (not -e $branch_db_path) {
-                next;
+                die "Unable to find branch database ($branch_db_path).";
             }
             open my $fh, '<', $branch_db_path;
             my @commits;
@@ -153,16 +165,19 @@ sub send_email
                     push @commits, [ $time, $id ];
                 }
             }
+            if (not @commits) {
+                next;
+            }
             print $ft "Repository: $name\nBranch:     $branch_name\n\n";
             for my $commit (@commits) {
                 my ($time, $id) = @{$commit};
                 $time =~ s/T/ /;
                 print $ft "Pulled at: $time\n";
-                print $ft $impl->show($id);
+                print $ft @{$impl->show($id)};
                 print $ft "\n";
                 my $att_ft = File::Temp->new();
                 push @commit_data, [$name, $branch_name, $id, $att_ft];
-                print $att_ft $impl->show_all($id);
+                print $att_ft @{$impl->show_all($id)};
                 $att_ft->flush();
             }
             print $ft "\n";
@@ -186,7 +201,7 @@ sub send_email
                     encoding => 'quoted-printable',
                     filename => 'log.txt',
                 },
-                body_str => slurp($ft)
+                body_str => _slurp($ft)
             ),
             map {
                 my ($name, $entry, $id, $att_ft) = @{$_};
@@ -198,7 +213,7 @@ sub send_email
                         encoding => 'quoted-printable',
                         filename => "$name-$entry-$id.diff",
                     },
-                    body_str => slurp($att_ft)
+                    body_str => _slurp($att_ft)
                 );
                 $email
             } @commit_data

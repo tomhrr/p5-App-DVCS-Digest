@@ -92,7 +92,7 @@ sub show_all
 {
     my ($self, $id) = @_;
 
-    my @data = `git show $id`;
+    my @data = (`git show $id`);
 
     return \@data;
 }

@@ -5,7 +5,7 @@ use strict;
 use warnings FATAL => 'all';
 use Test::More;
 
-plan tests => 9;
+plan tests => 10;
 
 use App::DVCS::Digest::DVCS::Git;
 use File::Temp qw(tempdir);
@@ -15,6 +15,16 @@ sub _system
     my ($cmd) = @_;
 
     my $res = system("$cmd >/dev/null 2>&1");
+    if ($res != 0) {
+        die "Command ($cmd) failed: $res";
+    }
+}
+
+sub _system_np
+{
+    my ($cmd) = @_;
+
+    my $res = system("$cmd");
     if ($res != 0) {
         die "Command ($cmd) failed: $res";
     }
@@ -36,7 +46,7 @@ SKIP: {
               'No branches found in repository');
 
     _system("git checkout -b new-branch");
-    _system("echo 'asdf' > out");
+    _system_np("echo 'asdf' > out");
     _system("git add out");
     _system("git commit -m 'out'");
 
@@ -49,7 +59,7 @@ SKIP: {
         'Current branch name is correct');
 
     _system("git checkout -b new-branch2");
-    _system("echo 'asdf2' > out2");
+    _system_np("echo 'asdf2' > out2");
     _system("git add out2");
     _system("git commit -m 'out2'");
 
@@ -66,7 +76,7 @@ SKIP: {
               [],
               'No commits found since most recent commit');
 
-    _system("echo 'asdf3' > out3");
+    _system_np("echo 'asdf3' > out3");
     _system("git add out3");
     _system("git commit -m 'out3'");
 
@@ -80,10 +90,9 @@ SKIP: {
     like($info, qr/out3/,
         'Log information contains log message');
 
-#    todo: how to display new files properly.
-#    $info = join '', @{$git->show_all($commits[0])};
-#    like($info, qr/\+.*asdf3/,
-#        'Diff contains changed text');
+    $info = join '', @{$git->show_all($commits[0])};
+    like($info, qr/\+.*asdf3/,
+        'Diff contains changed text');
 }
 
 1;
