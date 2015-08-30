@@ -32,19 +32,16 @@ sub branches
 {
     my ($self) = @_;
 
-    my $heads_path = ".git/refs/heads";
-    opendir(my $dh, $heads_path);
+    my @branches =
+        grep { !/ -> / }
+        map  { chomp; $_ }
+            `git branch -r`;
 
     my @results;
-    while (my $entry = readdir($dh)) {
-        if ($entry eq '.' or $entry eq '..') {
-            next;
-        }
-        open my $fh, '<', "$heads_path/$entry";
-        my $commit = <$fh>;
-        close $fh;
+    for my $branch (@branches) {
+        my $commit = `git log $branch -1 --format="%H"`;
         chomp $commit;
-        push @results, [ $entry => $commit ];
+        push @results, [ $branch => $commit ];
     }
 
     return \@results;
