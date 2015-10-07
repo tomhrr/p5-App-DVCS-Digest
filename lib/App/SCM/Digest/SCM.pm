@@ -1,4 +1,4 @@
-package App::DVCS::Digest::DVCS;
+package App::SCM::Digest::SCM;
 
 use strict;
 use warnings;
@@ -44,12 +44,12 @@ __END__
 
 =head1 NAME
 
-App::DVCS::Digest::DVCS
+App::SCM::Digest::SCM
 
 =head1 DESCRIPTION
 
-Interface for the operations required of a DVCS by
-L<App::DVCS::Digest>.
+Interface for the operations required of a SCM by
+L<App::SCM::Digest>.
 
 =head1 INTERFACE METHODS
 

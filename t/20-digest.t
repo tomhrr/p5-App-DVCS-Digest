@@ -7,7 +7,7 @@ use Test::More;
 
 plan tests => 27;
 
-use App::DVCS::Digest;
+use App::SCM::Digest;
 use File::Temp qw(tempdir);
 
 sub _system
@@ -31,7 +31,7 @@ sub _system_np
 }
 
 SKIP: {
-    eval { App::DVCS::Digest::DVCS::Git->new(); };
+    eval { App::SCM::Digest::SCM::Git->new(); };
     if ($@) {
         skip 'Git not available', 9;
     }
@@ -52,7 +52,7 @@ SKIP: {
     {
         no warnings;
         no strict 'refs';
-        *{'App::DVCS::Digest::sendmail'} = sub {
+        *{'App::SCM::Digest::sendmail'} = sub {
             push @emails, $_[0];
         };
     }
@@ -72,7 +72,7 @@ SKIP: {
         ],
     );
 
-    my $digest = eval { App::DVCS::Digest->new(\%config); };
+    my $digest = eval { App::SCM::Digest->new(\%config); };
     ok($digest, 'Got new digest object');
     diag $@ if $@;
 

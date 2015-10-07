@@ -7,7 +7,7 @@ use Test::More;
 
 plan tests => 14;
 
-use App::DVCS::Digest::DVCS;
+use App::SCM::Digest::SCM;
 
 {
     my @methods = qw(open_repository
@@ -19,7 +19,7 @@ use App::DVCS::Digest::DVCS;
                      show_all);
 
     for my $method (@methods) {
-        eval { App::DVCS::Digest::DVCS->$method() };
+        eval { App::SCM::Digest::SCM->$method() };
         ok($@, 'Died on calling unimplemented method');
         like($@, qr/Not implemented/, 'Got correct error message');
     }

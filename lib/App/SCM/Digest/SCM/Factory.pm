@@ -1,16 +1,16 @@
-package App::DVCS::Digest::DVCS::Factory;
+package App::SCM::Digest::SCM::Factory;
 
 use strict;
 use warnings;
 
-use App::DVCS::Digest::DVCS::Git;
-use App::DVCS::Digest::DVCS::Hg;
+use App::SCM::Digest::SCM::Git;
+use App::SCM::Digest::SCM::Hg;
 
 sub new
 {
     my ($class, $name) = @_;
 
-    my $pkg = 'App::DVCS::Digest::DVCS::'.(ucfirst (lc $name));
+    my $pkg = 'App::SCM::Digest::SCM::'.(ucfirst (lc $name));
     return $pkg->new();
 }
 
@@ -20,11 +20,11 @@ __END__
 
 =head1 NAME
 
-App::DVCS::Digest::DVCS::Factory
+App::SCM::Digest::SCM::Factory
 
 =head1 DESCRIPTION
 
-Factory class for L<App::DVCS::Digest::DVCS> implementations.
+Factory class for L<App::SCM::Digest::SCM> implementations.
 
 =head1 CONSTRUCTOR
 

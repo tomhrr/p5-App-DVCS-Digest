@@ -1,4 +1,4 @@
-package App::DVCS::Digest::DVCS::Hg;
+package App::SCM::Digest::SCM::Hg;
 
 use strict;
 use warnings;
@@ -106,10 +106,10 @@ __END__
 
 =head1 NAME
 
-App::DVCS::Digest::DVCS::Git
+App::SCM::Digest::SCM::Git
 
 =head1 DESCRIPTION
 
-Git L<App::DVCS::Digest::DVCS> implementation.
+Git L<App::SCM::Digest::SCM> implementation.
 
 =cut

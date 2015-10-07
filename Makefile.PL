@@ -5,9 +5,9 @@ use ExtUtils::MakeMaker;
 use ExtUtils::MakeMaker::Config;
 
 my $output = WriteMakefile(
-    NAME          => 'App::DVCS::Digest',
+    NAME          => 'App::SCM::Digest',
     AUTHOR        => 'Tom Harrison <tomhrr@cpan.org>',
-    VERSION_FROM  => 'lib/App/DVCS/Digest.pm',
+    VERSION_FROM  => 'lib/App/SCM/Digest.pm',
     ABSTRACT      => 'Send repository commit digest emails',
     LICENSE       => 'perl_5',
     PL_FILES      => {},
@@ -28,10 +28,10 @@ my $output = WriteMakefile(
         'YAML'                  => 0,
     },
     dist  => { COMPRESS => 'gzip -9f', SUFFIX => 'gz', },
-    clean => { FILES => 'App-DVCS-Digest-*' },
+    clean => { FILES => 'App-SCM-Digest-*' },
     META_MERGE     => {
         resources => {
-            repository => 'https://github.com/tomhrr/p5-App-DVCS-Digest'
+            repository => 'https://github.com/tomhrr/p5-App-SCM-Digest'
         }
     },
 );

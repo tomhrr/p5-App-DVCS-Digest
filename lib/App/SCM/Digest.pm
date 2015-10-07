@@ -1,9 +1,9 @@
-package App::DVCS::Digest;
+package App::SCM::Digest;
 
 use strict;
 use warnings;
 
-use App::DVCS::Digest::DVCS::Factory;
+use App::SCM::Digest::SCM::Factory;
 
 use autodie;
 use DateTime;
@@ -28,7 +28,7 @@ sub _impl
 {
     my ($name) = @_;
 
-    return App::DVCS::Digest::DVCS::Factory->new($name);
+    return App::SCM::Digest::SCM::Factory->new($name);
 }
 
 sub _slurp
@@ -231,11 +231,11 @@ __END__
 
 =head1 NAME
 
-App::DVCS::Digest
+App::SCM::Digest
 
 =head1 SYNOPSIS
 
-    my $digest = App::DVCS::Digest->new($config);
+    my $digest = App::SCM::Digest->new($config);
     $digest->update();
     $digest->send();
 
@@ -274,7 +274,7 @@ a valid constructor value for L<DateTime::TimeZone>.
 =item B<new>
 
 Takes a configuration hashref, as per L<CONFIGURATION> as its single
-argument.  Returns a new instance of L<App::DVCS::Digest>.
+argument.  Returns a new instance of L<App::SCM::Digest>.
 
 =back
 

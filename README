@@ -1,4 +1,4 @@
-App-DVCS-Digest - Send repository commit digest emails
+App-SCM-Digest - Send repository commit digest emails
 
 (Work in progress.)
 
@@ -16,21 +16,21 @@ SUPPORT AND DOCUMENTATION
 After installing, you can find documentation for this module with the
 perldoc command.
 
-    perldoc App::DVCS::Digest
+    perldoc App::SCM::Digest
 
 You can also look for information at:
 
     RT, CPAN's request tracker (report bugs here)
-        http://rt.cpan.org/NoAuth/Bugs.html?Dist=App-DVCS-Digest
+        http://rt.cpan.org/NoAuth/Bugs.html?Dist=App-SCM-Digest
 
     AnnoCPAN, Annotated CPAN documentation
-        http://annocpan.org/dist/App-DVCS-Digest
+        http://annocpan.org/dist/App-SCM-Digest
 
     CPAN Ratings
-        http://cpanratings.perl.org/d/App-DVCS-Digest
+        http://cpanratings.perl.org/d/App-SCM-Digest
 
     Search CPAN
-        http://search.cpan.org/dist/App-DVCS-Digest/
+        http://search.cpan.org/dist/App-SCM-Digest/
 
 
 COPYRIGHT AND LICENCE

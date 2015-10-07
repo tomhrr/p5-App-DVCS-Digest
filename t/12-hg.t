@@ -7,7 +7,7 @@ use Test::More;
 
 plan tests => 10;
 
-use App::DVCS::Digest::DVCS::Hg;
+use App::SCM::Digest::SCM::Hg;
 use File::Temp qw(tempdir);
 
 sub _system
@@ -31,7 +31,7 @@ sub _system_np
 }
 
 SKIP: {
-    my $hg = eval { App::DVCS::Digest::DVCS::Hg->new(); };
+    my $hg = eval { App::SCM::Digest::SCM::Hg->new(); };
     if ($@) {
         skip 'Mercurial not available', 9;
     }

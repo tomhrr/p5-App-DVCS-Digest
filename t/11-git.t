@@ -7,7 +7,7 @@ use Test::More;
 
 plan tests => 10;
 
-use App::DVCS::Digest::DVCS::Git;
+use App::SCM::Digest::SCM::Git;
 use File::Temp qw(tempdir);
 
 sub _system
@@ -31,7 +31,7 @@ sub _system_np
 }
 
 SKIP: {
-    my $git = eval { App::DVCS::Digest::DVCS::Git->new(); };
+    my $git = eval { App::SCM::Digest::SCM::Git->new(); };
     if ($@) {
         skip 'Git not available', 9;
     }
