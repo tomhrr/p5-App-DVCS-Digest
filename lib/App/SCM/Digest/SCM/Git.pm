@@ -19,11 +19,29 @@ sub new
     return $self;
 }
 
+sub clone
+{
+    my ($self, $url, $name) = @_;
+
+    system("git clone $url $name >/dev/null 2>&1");
+
+    return 1;
+}
+
 sub open_repository
 {
     my ($self, $path) = @_;
 
     chdir $path;
+
+    return 1;
+}
+
+sub pull
+{
+    my ($self) = @_;
+
+    system("git pull >/dev/null 2>&1");
 
     return 1;
 }

@@ -19,11 +19,35 @@ sub new
     return $self;
 }
 
+sub clone
+{
+    my ($self, $url, $name) = @_;
+
+    my $res = system("hg clone $url $name >/dev/null 2>&1");
+    if ($res != 0) {
+        die "Unable to clone $url.";
+    }
+
+    return 1;
+}
+
 sub open_repository
 {
     my ($self, $path) = @_;
 
     chdir $path;
+
+    return 1;
+}
+
+sub pull
+{
+    my ($self) = @_;
+
+    my $res = system("hg pull >/dev/null 2>&1");
+    if ($res != 0) {
+        die "Unable to pull.";
+    }
 
     return 1;
 }

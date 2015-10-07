@@ -5,12 +5,14 @@ use strict;
 use warnings FATAL => 'all';
 use Test::More;
 
-plan tests => 14;
+plan tests => 18;
 
 use App::SCM::Digest::SCM;
 
 {
-    my @methods = qw(open_repository
+    my @methods = qw(clone
+                     open_repository
+                     pull
                      branches
                      branch
                      checkout

@@ -3,7 +3,17 @@ package App::SCM::Digest::SCM;
 use strict;
 use warnings;
 
+sub clone
+{
+    die "Not implemented.";
+}
+
 sub open_repository
+{
+    die "Not implemented.";
+}
+
+sub pull
 {
     die "Not implemented.";
 }
@@ -60,12 +70,22 @@ L<App::SCM::Digest>.
 Constructor for the implementation.  If the implementation is not
 supported, this call should die.
 
+=item B<clone>
+
+Takes a repository URL and a directory name as its arguments.  Clones
+(i.e. checks out a local copy of) the repository into the specified
+directory.
+
 =item B<open_repository>
 
 Takes a repository path as its single argument.  "Opens" the
 repository, typically by way of C<chdir>.  Once a repository is
 opened, subsequent method calls will operate on that repository, until
 C<open> is called again or C<chdir> is executed in some other context.
+
+=item B<pull>
+
+Pulls pending updates from the remote repository.
 
 =item B<branches>
 

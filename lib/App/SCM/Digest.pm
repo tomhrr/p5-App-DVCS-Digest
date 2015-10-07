@@ -52,12 +52,13 @@ sub _init
     my $db_path = $config->{'db_path'};
     my $repositories = $config->{'repositories'};
     for my $repository (@{$repositories}) {
-        my ($name, $path, $type) = @{$repository}{qw(name path type)};
+        my ($name, $url, $type) = @{$repository}{qw(name url type)};
         if (not -e "$db_path/$name") {
             mkdir "$db_path/$name";
         }
         my $impl = _impl($type);
-        $impl->open_repository($path);
+        $impl->clone($url, $name);
+        $impl->open_repository($name);
         my @branches = @{$impl->branches()};
         for my $branch (@branches) {
             my ($branch_name, $commit) = @{$branch};
@@ -84,9 +85,10 @@ sub _update
     my $repositories = $config->{'repositories'};
     my $current_branch;
     for my $repository (@{$repositories}) {
-        my ($name, $path, $type) = @{$repository}{qw(name path type)};
+        my ($name, $type) = @{$repository}{qw(name type)};
         my $impl = _impl($type);
-        $impl->open_repository($path);
+        $impl->open_repository($name);
+        $impl->pull();
         my $current_branch = $impl->branch_name();
         my @branches = @{$impl->branches()};
         for my $branch (@branches) {
@@ -144,9 +146,9 @@ sub send_email
     my $db_path = $config->{'db_path'};
     my $repositories = $config->{'repositories'};
     for my $repository (@{$repositories}) {
-        my ($name, $path, $type) = @{$repository}{qw(name path type)};
+        my ($name, $type) = @{$repository}{qw(name type)};
         my $impl = _impl($type);
-        $impl->open_repository($path);
+        $impl->open_repository($name);
         my $current_branch = $impl->branch_name();
 
         my @branches = @{$impl->branches()};
@@ -259,7 +261,7 @@ The configuration hashref is like so:
     },
     repositories => [
         { name => 'test',
-          path => '/path/to/repository',
+          url  => 'http://example.org/path/to/repository',
           type => ['git'|'hg'] },
         ...
     ]
