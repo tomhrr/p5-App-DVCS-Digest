@@ -67,7 +67,7 @@ SKIP: {
         },
         repositories => [
             { name => 'test',
-              path => $repo_dir,
+              url  => "file://$repo_dir",
               type => 'git' }
         ],
     );
@@ -78,12 +78,12 @@ SKIP: {
 
     eval { $digest->send_email() };
     ok($@, 'Died trying to send email pre-initialisation');
-    like($@, qr/Unable to find branch database/,
+    like($@, qr/Unable to open repository 'test'/,
         'Got correct error message');
 
     eval { $digest->_update() };
     ok($@, 'Died trying to update pre-initialisation');
-    like($@, qr/Unable to find branch database/,
+    like($@, qr/Unable to open repository 'test'/,
         'Got correct error message');
 
     eval {

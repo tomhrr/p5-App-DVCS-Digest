@@ -87,7 +87,10 @@ sub _update
     for my $repository (@{$repositories}) {
         my ($name, $type) = @{$repository}{qw(name type)};
         my $impl = _impl($type);
-        $impl->open_repository($name);
+        eval { $impl->open_repository($name); };
+        if (my $error = $@) {
+            die "Unable to open repository '$name': $error";
+        }
         $impl->pull();
         my $current_branch = $impl->branch_name();
         my @branches = @{$impl->branches()};
@@ -148,7 +151,10 @@ sub send_email
     for my $repository (@{$repositories}) {
         my ($name, $type) = @{$repository}{qw(name type)};
         my $impl = _impl($type);
-        $impl->open_repository($name);
+        eval { $impl->open_repository($name); };
+        if (my $error = $@) {
+            die "Unable to open repository '$name': $error";
+        }
         my $current_branch = $impl->branch_name();
 
         my @branches = @{$impl->branches()};

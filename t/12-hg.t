@@ -50,12 +50,18 @@ SKIP: {
     _system("hg add out");
     _system("hg commit -m 'out'");
 
-    @branches = @{$hg->branches()};
+    my $repo_holder = tempdir(CLEANUP => 1);
+    chdir $repo_holder;
+    my $hg2 = App::SCM::Digest::SCM::Hg->new();
+    $hg2->clone("file://".$repo_dir, "repo");
+    $hg2->open_repository("repo");
+
+    @branches = @{$hg2->branches()};
     my @branch_names = map { $_->[0] } @branches;
     is_deeply(\@branch_names, [qw(new-branch)],
               'New branch found in repository');
 
-    is($hg->branch_name(), 'new-branch',
+    is($hg2->branch_name(), 'new-branch',
         'Current branch name is correct');
 
     _system("hg branch new-branch2");
@@ -63,16 +69,16 @@ SKIP: {
     _system("hg add out2");
     _system("hg commit -m 'out2'");
 
-    is($hg->branch_name(), 'new-branch2',
+    is($hg2->branch_name(), 'new-branch2',
         'Current branch name is correct (switched)');
 
-    $hg->checkout('new-branch');
+    $hg2->checkout('new-branch');
 
-    is($hg->branch_name(), 'new-branch',
+    is($hg2->branch_name(), 'new-branch',
         'Current branch name is correct (switched back)');
 
-    @branches = sort { $a->[0] cmp $b->[0] } @{$hg->branches()};
-    is_deeply($hg->commits_from($branches[0]->[0], $branches[0]->[1]),
+    @branches = sort { $a->[0] cmp $b->[0] } @{$hg2->branches()};
+    is_deeply($hg2->commits_from($branches[0]->[0], $branches[0]->[1]),
               [],
               'No commits found since most recent commit');
 
@@ -80,19 +86,21 @@ SKIP: {
     _system("hg add out3");
     _system("hg commit -m 'out3'");
 
-    my @commits = @{$hg->commits_from($branches[0]->[0], $branches[0]->[1])};
+    my @commits = @{$hg2->commits_from($branches[0]->[0], $branches[0]->[1])};
     is(@commits, 1, 'Found one commit since original commit');
-    @branches = sort { $a->[0] cmp $b->[0] } @{$hg->branches()};
+    @branches = sort { $a->[0] cmp $b->[0] } @{$hg2->branches()};
     is($commits[0], $branches[0]->[1],
         'The found commit has the correct ID');
 
-    my $info = join '', @{$hg->show($commits[0])};
+    my $info = join '', @{$hg2->show($commits[0])};
     like($info, qr/out3/,
         'Log information contains log message');
 
-    $info = join '', @{$hg->show_all($commits[0])};
+    $info = join '', @{$hg2->show_all($commits[0])};
     like($info, qr/\+.*asdf3/,
         'Diff contains changed text');
+
+    chdir("/tmp");
 }
 
 1;

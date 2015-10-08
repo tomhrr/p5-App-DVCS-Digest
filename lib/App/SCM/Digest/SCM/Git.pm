@@ -51,16 +51,20 @@ sub branches
     my ($self) = @_;
 
     my @branches =
+        map  { s/^\s+.*\///; s/\s+$//; $_ }
         grep { !/ -> / }
         map  { chomp; $_ }
             `git branch -r`;
 
     my @results;
+    my $current_branch = $self->branch_name();
     for my $branch (@branches) {
-        my $commit = `git log $branch -1 --format="%H"`;
+        $self->checkout($branch);
+        my $commit = `git log -1 --format="%H" $branch`;
         chomp $commit;
         push @results, [ $branch => $commit ];
     }
+    $self->checkout($current_branch);
 
     return \@results;
 }

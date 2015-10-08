@@ -50,12 +50,18 @@ SKIP: {
     _system("git add out");
     _system("git commit -m 'out'");
 
-    @branches = @{$git->branches()};
+    my $repo_holder = tempdir(CLEANUP => 1);
+    chdir $repo_holder;
+    my $git2 = App::SCM::Digest::SCM::Git->new();
+    $git2->clone("file://".$repo_dir, "repo");
+    $git2->open_repository("repo");
+
+    @branches = @{$git2->branches()};
     my @branch_names = map { $_->[0] } @branches;
     is_deeply(\@branch_names, [qw(new-branch)],
               'New branch found in repository');
 
-    is($git->branch_name(), 'new-branch',
+    is($git2->branch_name(), 'new-branch',
         'Current branch name is correct');
 
     _system("git checkout -b new-branch2");
@@ -63,16 +69,16 @@ SKIP: {
     _system("git add out2");
     _system("git commit -m 'out2'");
 
-    is($git->branch_name(), 'new-branch2',
+    is($git2->branch_name(), 'new-branch2',
         'Current branch name is correct (switched)');
 
-    $git->checkout('new-branch');
+    $git2->checkout('new-branch');
 
-    is($git->branch_name(), 'new-branch',
+    is($git2->branch_name(), 'new-branch',
         'Current branch name is correct (switched back)');
 
-    @branches = sort { $a->[0] cmp $b->[0] } @{$git->branches()};
-    is_deeply($git->commits_from($branches[0]->[0], $branches[0]->[1]),
+    @branches = sort { $a->[0] cmp $b->[0] } @{$git2->branches()};
+    is_deeply($git2->commits_from($branches[0]->[0], $branches[0]->[1]),
               [],
               'No commits found since most recent commit');
 
@@ -80,19 +86,21 @@ SKIP: {
     _system("git add out3");
     _system("git commit -m 'out3'");
 
-    my @commits = @{$git->commits_from($branches[0]->[0], $branches[0]->[1])};
+    my @commits = @{$git2->commits_from($branches[0]->[0], $branches[0]->[1])};
     is(@commits, 1, 'Found one commit since original commit');
-    @branches = sort { $a->[0] cmp $b->[0] } @{$git->branches()};
+    @branches = sort { $a->[0] cmp $b->[0] } @{$git2->branches()};
     is($commits[0], $branches[0]->[1],
         'The found commit has the correct ID');
 
-    my $info = join '', @{$git->show($commits[0])};
+    my $info = join '', @{$git2->show($commits[0])};
     like($info, qr/out3/,
         'Log information contains log message');
 
-    $info = join '', @{$git->show_all($commits[0])};
+    $info = join '', @{$git2->show_all($commits[0])};
     like($info, qr/\+.*asdf3/,
         'Diff contains changed text');
+
+    chdir("/tmp");
 }
 
 1;
