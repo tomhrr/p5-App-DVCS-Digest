@@ -21,7 +21,7 @@ sub main
     my %options;
     GetOptions(\%options, 'conf=s', 'update', 'send', 'from', 'to');
 
-    my $config_path = $options{'conf'} || '/etc/dvcs-digest.conf';
+    my $config_path = $options{'conf'} || '/etc/scm-digest.conf';
     my $config = load_config($config_path);
 
     my $app = App::SCM::Digest->new($config);
