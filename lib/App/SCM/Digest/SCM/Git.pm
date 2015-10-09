@@ -86,6 +86,7 @@ sub checkout
     my ($self, $branch) = @_;
 
     system("git checkout $branch >/dev/null 2>&1");
+    system("git pull >/dev/null 2>&1");
 
     return 1;
 }

@@ -57,10 +57,12 @@ SKIP: {
         };
     }
 
-    my $db_path = tempdir(CLEANUP => 1);
+    my $db_path   = tempdir(CLEANUP => 1);
+    my $repo_path = tempdir(CLEANUP => 1);
 
     my %config = (
         db_path => $db_path,
+        repository_path => $repo_path,
         headers => {
             from => 'Test User <test@example.org>',
             to   => 'Test User <test@example.org>',
@@ -105,7 +107,6 @@ SKIP: {
               'No mail sent (no commits since initialisation) (2)');
 
     chdir $repo_dir;
-    _system("git init .");
     _system("git checkout new-branch");
     _system_np("echo 'asdf3' > out3");
     _system("git add out3");
@@ -178,6 +179,8 @@ SKIP: {
     ok($@, 'Unable to process when database corrupt');
     like($@, qr/Unable to find commit ID in database/,
         'Got correct error message');
+
+    chdir('/tmp');
 }
 
 1;

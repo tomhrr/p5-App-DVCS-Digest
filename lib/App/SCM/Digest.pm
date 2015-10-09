@@ -49,15 +49,19 @@ sub _init
 
     my $config = $self->{'config'};
 
+    my $repo_path = $config->{'repository_path'};
     my $db_path = $config->{'db_path'};
     my $repositories = $config->{'repositories'};
     for my $repository (@{$repositories}) {
+        chdir $repo_path or die $!;
         my ($name, $url, $type) = @{$repository}{qw(name url type)};
         if (not -e "$db_path/$name") {
             mkdir "$db_path/$name";
         }
         my $impl = _impl($type);
-        $impl->clone($url, $name);
+        if (not -e $name) {
+            $impl->clone($url, $name);
+        }
         $impl->open_repository($name);
         my @branches = @{$impl->branches()};
         for my $branch (@branches) {
@@ -81,10 +85,12 @@ sub _update
 
     my $config = $self->{'config'};
 
+    my $repo_path = $config->{'repository_path'};
     my $db_path = $config->{'db_path'};
     my $repositories = $config->{'repositories'};
     my $current_branch;
     for my $repository (@{$repositories}) {
+        chdir $repo_path or die $!;
         my ($name, $type) = @{$repository}{qw(name type)};
         my $impl = _impl($type);
         eval { $impl->open_repository($name); };
@@ -146,9 +152,11 @@ sub send_email
     my @commit_data;
     my $config = $self->{'config'};
 
+    my $repo_path = $config->{'repository_path'};
     my $db_path = $config->{'db_path'};
     my $repositories = $config->{'repositories'};
     for my $repository (@{$repositories}) {
+        chdir $repo_path or die $!;
         my ($name, $type) = @{$repository}{qw(name type)};
         my $impl = _impl($type);
         eval { $impl->open_repository($name); };
@@ -249,16 +257,18 @@ App::SCM::Digest
 
 =head1 DESCRIPTION
 
-Provides for sending repository commit digest emails.  It does this
-based on the time when the commit was pulled into the local
-repository, rather than when the commit was committed, so that no
-commits are missed.
+Provides for sending source control management (SCM) repository commit
+digest emails.  It does this based on the time when the commit was
+pulled into the local repository, rather than when the commit was
+committed, so that for a particular time period, the relevant set of
+commits remains the same.
 
 =head1 CONFIGURATION
 
 The configuration hashref is like so:
 
-    db_path  => "/path/to/db",
+    db_path         => "/path/to/db",
+    repository_path => "/path/to/local/repositories",
     timezone => "local",
     headers  => {
         from => "From Address <from@example.org>",
@@ -269,11 +279,26 @@ The configuration hashref is like so:
         { name => 'test',
           url  => 'http://example.org/path/to/repository',
           type => ['git'|'hg'] },
+        { name => 'local-test',
+          url  => 'file:///path/to/repository',
+          type => ['git'|'hg'] },
         ...
     ]
 
+The commit pull times for each of the repositories are stored in
+C<db_path>, which must be a directory.
+
+The local copies of the repositories are stored in C<repository_path>,
+which must also be a directory.
+
+C<repository_path>
+
 The C<timezone> entry is optional, and defaults to 'UTC'.  It must be
 a valid constructor value for L<DateTime::TimeZone>.
+
+L<App::SCM::Digest> clones local copies of the repositories into the
+C<repository_path> directory.  These local copies should not be used
+except by L<App::SCM::Digest>.
 
 =head1 CONSTRUCTOR
 
