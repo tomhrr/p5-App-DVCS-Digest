@@ -89,8 +89,8 @@ SKIP: {
     ok($digest, 'Got new digest object');
     diag $@ if $@;
 
-    eval { $digest->send_email() };
-    ok($@, 'Died trying to send email pre-initialisation');
+    eval { $digest->get_email() };
+    ok($@, 'Died trying to get email pre-initialisation');
     like($@, qr/Unable to open repository 'test'/,
         'Got correct error message');
 
@@ -101,7 +101,7 @@ SKIP: {
 
     eval {
         $digest->update();
-        $digest->send_email();
+        $digest->send_email($digest->get_email());
     };
     ok((not $@), 'Updated database and attempted to send mail');
     diag $@ if $@;
@@ -110,7 +110,7 @@ SKIP: {
 
     eval {
         $digest->update();
-        $digest->send_email();
+        $digest->send_email($digest->get_email());
     };
     ok((not $@), 'Updated database and attempted to send mail (2)');
     diag $@ if $@;
@@ -125,7 +125,7 @@ SKIP: {
 
     eval {
         $digest->update();
-        $digest->send_email();
+        $digest->send_email($digest->get_email());
     };
     ok((not $@), 'Updated database and sent mail');
     diag $@ if $@;
@@ -145,7 +145,7 @@ SKIP: {
 
     eval {
         $digest->update();
-        $digest->send_email($from);
+        $digest->send_email($digest->get_email($from));
     };
     ok((not $@), "Updated database and sent mail ('from' provided)");
     diag $@ if $@;
@@ -159,7 +159,7 @@ SKIP: {
 
     @emails = ();
     eval {
-        $digest->send_email('0000-00-00T00:00:00');
+        $digest->send_email($digest->get_email('0000-01-01T00:00:00'));
     };
     ok((not $@), "Sent email for all commits (zero 'from' provided)");
     diag $@ if $@;
@@ -173,7 +173,7 @@ SKIP: {
 
     @emails = ();
     eval {
-        $digest->send_email(undef, '9999-00-00T00:00:00');
+        $digest->send_email($digest->get_email(undef, '9999-01-01T00:00:00'));
     };
     ok((not $@), 'Sent email for all commits (to provided)');
     diag $@ if $@;
@@ -187,7 +187,9 @@ SKIP: {
 
     @emails = ();
     eval {
-        $digest->send_email('0000-00-00T00:00:00', '9999-00-00T00:00:00');
+        $digest->send_email(
+            $digest->get_email('0000-01-01T00:00:00', '9999-01-01T00:00:00')
+        );
     };
     ok((not $@), 'Sent email for all commits (both provided)');
     diag $@ if $@;
@@ -205,7 +207,7 @@ SKIP: {
 
     eval {
         $digest->update();
-        $digest->send_email();
+        $digest->send_email($digest->get_email());
     };
     ok($@, 'Unable to process when database corrupt');
     like($@, qr/Unable to find commit ID in database/,

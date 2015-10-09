@@ -7,6 +7,8 @@ use App::SCM::Digest::SCM::Factory;
 
 use autodie;
 use DateTime;
+use DateTime::Format::Strptime;
+use DateTime::TimeZone;
 use Getopt::Long;
 use Email::MIME;
 use Email::Sender::Simple qw(sendmail);
@@ -137,7 +139,7 @@ sub update
     return 1;
 }
 
-sub send_email
+sub get_email
 {
     my ($self, $from, $to) = @_;
 
@@ -154,6 +156,23 @@ sub send_email
     my $ft = File::Temp->new();
     my @commit_data;
     my $config = $self->{'config'};
+
+    my $tz = $config->{'timezone'} || 'UTC';
+    my $strp =
+        DateTime::Format::Strptime->new(pattern   => '%FT%T',
+                                        time_zone => $tz);
+    my $from_dt = $strp->parse_datetime($from);
+    my $to_dt   = $strp->parse_datetime($to);
+    if (not $from_dt) {
+        die "Invalid 'from' time provided.";
+    }
+    if (not $to_dt) {
+        die "Invalid 'to' time provided.";
+    }
+    $from_dt->set_time_zone('UTC');
+    $to_dt->set_time_zone('UTC');
+    $from = $from_dt->strftime('%FT%T');
+    $to = $to_dt->strftime('%FT%T');
 
     my $repo_path = $config->{'repository_path'};
     my $db_path = $config->{'db_path'};
@@ -187,7 +206,8 @@ sub send_email
             if (not @commits) {
                 next;
             }
-            print $ft "Repository: $name\nBranch:     $branch_name\n\n";
+            print $ft "Repository: $name\n".
+                      "Branch:     $branch_name\n\n";
             for my $commit (@commits) {
                 my ($time, $id) = @{$commit};
                 $time =~ s/T/ /;
@@ -215,10 +235,10 @@ sub send_email
             Email::MIME->create(
                 attributes => {
                     content_type => 'text/plain',
-                    disposition => 'attachment',
-                    charset => 'UTF-8',
-                    encoding => 'quoted-printable',
-                    filename => 'log.txt',
+                    disposition  => 'attachment',
+                    charset      => 'UTF-8',
+                    encoding     => 'quoted-printable',
+                    filename     => 'log.txt',
                 },
                 body_str => _slurp($ft)
             ),
@@ -227,10 +247,10 @@ sub send_email
                 my $email = Email::MIME->create(
                     attributes => {
                         content_type => 'text/plain',
-                        disposition => 'attachment',
-                        charset => 'UTF-8',
-                        encoding => 'quoted-printable',
-                        filename => "$name-$entry-$id.diff",
+                        disposition  => 'attachment',
+                        charset      => 'UTF-8',
+                        encoding     => 'quoted-printable',
+                        filename     => "$name-$entry-$id.diff",
                     },
                     body_str => _slurp($att_ft)
                 );
@@ -238,6 +258,19 @@ sub send_email
             } @commit_data
         ]
     );
+
+    return $email;
+}
+
+sub send_email
+{
+    my ($self, $email) = @_;
+
+    # Return here, rather than throwing an error, so that no
+    # null-check equivalent is required in the caller.
+    if (not $email) {
+        return;
+    }
 
     sendmail($email);
 
@@ -272,8 +305,8 @@ The configuration hashref is like so:
 
     db_path         => "/path/to/db",
     repository_path => "/path/to/local/repositories",
-    timezone => "local",
-    headers  => {
+    timezone        => "local",
+    headers => {
         from => "From Address <from@example.org>",
         to   => "To Address <to@example.org>",
         ...
@@ -297,7 +330,8 @@ which must also be a directory.
 C<repository_path>
 
 The C<timezone> entry is optional, and defaults to 'UTC'.  It must be
-a valid constructor value for L<DateTime::TimeZone>.
+a valid constructor value for L<DateTime::TimeZone>.  See
+L<DateTime::TimeZone::Catalog> for a list of valid options.
 
 L<App::SCM::Digest> clones local copies of the repositories into the
 C<repository_path> directory.  These local copies should not be used
@@ -325,16 +359,23 @@ repository-branch pair.  These databases record the time at which each
 commit was received.
 
 When initialising a particular database, only the latest commit is
-stored, with a time of '0000-00-00 00:00:00'.  Subsequent updates
+stored, with a time of '0000-00-00T00:00:00'.  Subsequent updates
 record subsequent commits with the current time, i.e., the time at
 which the update command is running.
 
+=item B<get_email>
+
+Takes two date strings with the format '%Y-%m-%dT%H:%M:%S',
+representing the lower and upper bounds of a time period, as its
+arguments.  Returns an L<Email::MIME> object containing all of the
+commits pulled within that time period, using the details from the
+C<headers> entry in the configuration to construct the email.
+
 =item B<send_email>
 
-Takes two L<DateTime> objects, representing the lower and upper bounds
-of a time period, as its arguments.  Sends an email containing all of
-the commits pulled within that time period, using the details from the
-C<headers> entry in the configuration to construct the email.
+Takes the result of calling L<get_email>, and sends it.
+L<Email::Sender::Simple> is used for sending, so the environment
+overrides that it supports may be used here.
 
 =back
 
