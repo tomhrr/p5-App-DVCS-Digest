@@ -73,7 +73,9 @@ sub branch_name
 {
     my ($self) = @_;
 
-    my $branch = `git rev-parse --abbrev-ref HEAD`;
+    # todo: This prints a warning if there are no branches; there is
+    # probably a better way of dealing with this problem.
+    my $branch = `git rev-parse --abbrev-ref HEAD 2>/dev/null`;
     chomp $branch;
 
     return $branch;
