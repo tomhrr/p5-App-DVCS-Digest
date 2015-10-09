@@ -55,14 +55,16 @@ sub _init
     for my $repository (@{$repositories}) {
         chdir $repo_path or die $!;
         my ($name, $url, $type) = @{$repository}{qw(name url type)};
-        if (not -e "$db_path/$name") {
-            mkdir "$db_path/$name";
-        }
         my $impl = _impl($type);
-        if (not -e $name) {
+        my $pre_existing = (-e $name);
+        if (not $pre_existing) {
+            mkdir "$db_path/$name";
             $impl->clone($url, $name);
         }
         $impl->open_repository($name);
+        if ($pre_existing) {
+            $impl->pull();
+        }
         my @branches = @{$impl->branches()};
         for my $branch (@branches) {
             my ($branch_name, $commit) = @{$branch};
@@ -71,7 +73,8 @@ sub _init
                 next;
             }
             open my $fh, '>', $branch_db_path;
-            print $fh POSIX::strftime('%FT%T', gmtime(0)).".$commit\n";
+            my $time = ($pre_existing ? time() : 0);
+            print $fh POSIX::strftime('%FT%T', gmtime($time)).".$commit\n";
             close $fh;
         }
     }

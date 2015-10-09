@@ -5,7 +5,7 @@ use strict;
 use warnings FATAL => 'all';
 use Test::More;
 
-plan tests => 27;
+plan tests => 31;
 
 use App::SCM::Digest;
 use File::Temp qw(tempdir);
@@ -47,6 +47,17 @@ SKIP: {
     _system_np("echo 'asdf2' > out2");
     _system("git add out2");
     _system("git commit -m 'out2'");
+
+    my $other_remote_dir = tempdir(CLEANUP => 1);
+    chdir $other_remote_dir;
+    _system("git clone file://$repo_dir ord");
+    my $other_remote_repo = "$other_remote_dir/ord";
+    chdir $other_remote_repo;
+    _system("git checkout -b new-branch4");
+    _system_np("echo 'asdf4' > out4");
+    _system("git add out4");
+    _system("git commit -m 'out4'");
+    sleep(1);
 
     my @emails;
     {
@@ -126,11 +137,31 @@ SKIP: {
     unlike($email_content, qr/asdf\s*$/m,
         'Email does not contain initialisation content');
 
+    sleep(1);
+    my $from = POSIX::strftime('%FT%T', gmtime(time()));
+    @emails = ();
+    chdir $other_remote_repo;
+    _system("git push -u origin new-branch4");
+
+    eval {
+        $digest->update();
+        $digest->send_email($from);
+    };
+    ok((not $@), "Updated database and sent mail ('from' provided)");
+    diag $@ if $@;
+    is(@emails, 1, 'Email sent');
+
+    $email_content = join "\n", map { $_->body_str() } $emails[0]->parts();
+    like($email_content, qr/asdf4\s*$/m,
+        'Email contains changed content');
+    unlike($email_content, qr/asdf3\s*$/m,
+        'Email does not contain previous changed content');
+
     @emails = ();
     eval {
         $digest->send_email('0000-00-00T00:00:00');
     };
-    ok((not $@), 'Sent email for all commits (from provided)');
+    ok((not $@), "Sent email for all commits (zero 'from' provided)");
     diag $@ if $@;
     is(@emails, 1, 'Email sent');
 
