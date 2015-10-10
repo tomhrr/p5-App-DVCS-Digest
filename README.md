@@ -30,12 +30,18 @@ scm-digest [ options ]
 
 Options:
 
-  --conf {config}  Set configuration path (defaults to /etc/scm-digest.conf)
-  --update         Initialise and update local repositories
-  --get-email      Print digest email to standard output
-  --send-email     Send digest email
-  --from {time}    Only include commits made after this time in digest
-  --to {time}      Only include commits made before this time in digest
+ * --conf {config}
+    * Set configuration path (defaults to /etc/scm-digest.conf).
+ * --update
+    * Initialise and update local repositories.
+ * --get-email
+    * Print digest email to standard output.
+ * --send-email
+    * Send digest email.
+ * --from {time}
+    * Only include commits made after this time in digest.
+ * --to {time}
+    * Only include commits made before this time in digest.
 
 Time format is '%Y-%m-%dT%H:%M:%S', e.g. '2000-12-25T22:00:00'.
 
