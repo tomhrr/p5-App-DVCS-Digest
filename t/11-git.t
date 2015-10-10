@@ -9,26 +9,8 @@ plan tests => 10;
 
 use App::SCM::Digest::SCM::Git;
 use File::Temp qw(tempdir);
-
-sub _system
-{
-    my ($cmd) = @_;
-
-    my $res = system("$cmd >/dev/null 2>&1");
-    if ($res != 0) {
-        die "Command ($cmd) failed: $res";
-    }
-}
-
-sub _system_np
-{
-    my ($cmd) = @_;
-
-    my $res = system("$cmd");
-    if ($res != 0) {
-        die "Command ($cmd) failed: $res";
-    }
-}
+use lib './t/lib';
+use TestFunctions qw(tf_system tf_system_np);
 
 SKIP: {
     my $git = eval { App::SCM::Digest::SCM::Git->new(); };
@@ -38,17 +20,17 @@ SKIP: {
 
     my $repo_dir = tempdir(CLEANUP => 1);
     chdir $repo_dir;
-    _system("git init .");
+    tf_system("git init .");
 
     $git->open_repository($repo_dir);
     my @branches = @{$git->branches()};
     is_deeply(\@branches, [],
               'No branches found in repository');
 
-    _system("git checkout -b new-branch");
-    _system_np("echo 'asdf' > out");
-    _system("git add out");
-    _system("git commit -m 'out'");
+    tf_system("git checkout -b new-branch");
+    tf_system_np("echo 'asdf' > out");
+    tf_system("git add out");
+    tf_system("git commit -m 'out'");
 
     my $repo_holder = tempdir(CLEANUP => 1);
     chdir $repo_holder;
@@ -64,10 +46,10 @@ SKIP: {
     is($git2->branch_name(), 'new-branch',
         'Current branch name is correct');
 
-    _system("git checkout -b new-branch2");
-    _system_np("echo 'asdf2' > out2");
-    _system("git add out2");
-    _system("git commit -m 'out2'");
+    tf_system("git checkout -b new-branch2");
+    tf_system_np("echo 'asdf2' > out2");
+    tf_system("git add out2");
+    tf_system("git commit -m 'out2'");
 
     is($git2->branch_name(), 'new-branch2',
         'Current branch name is correct (switched)');
@@ -82,9 +64,9 @@ SKIP: {
               [],
               'No commits found since most recent commit');
 
-    _system_np("echo 'asdf3' > out3");
-    _system("git add out3");
-    _system("git commit -m 'out3'");
+    tf_system_np("echo 'asdf3' > out3");
+    tf_system("git add out3");
+    tf_system("git commit -m 'out3'");
 
     my @commits = @{$git2->commits_from($branches[0]->[0], $branches[0]->[1])};
     is(@commits, 1, 'Found one commit since original commit');

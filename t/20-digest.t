@@ -9,26 +9,8 @@ plan tests => 31;
 
 use App::SCM::Digest;
 use File::Temp qw(tempdir);
-
-sub _system
-{
-    my ($cmd) = @_;
-
-    my $res = system("$cmd >/dev/null 2>&1");
-    if ($res != 0) {
-        die "Command ($cmd) failed: $res";
-    }
-}
-
-sub _system_np
-{
-    my ($cmd) = @_;
-
-    my $res = system("$cmd 2>&1");
-    if ($res != 0) {
-        die "Command ($cmd) failed: $res";
-    }
-}
+use lib './t/lib';
+use TestFunctions qw(tf_system tf_system_np);
 
 SKIP: {
     eval { App::SCM::Digest::SCM::Git->new(); };
@@ -38,25 +20,25 @@ SKIP: {
 
     my $repo_dir = tempdir(CLEANUP => 1);
     chdir $repo_dir;
-    _system("git init .");
-    _system("git checkout -b new-branch");
-    _system_np("echo 'asdf' > out");
-    _system("git add out");
-    _system("git commit -m 'out'");
-    _system("git checkout -b new-branch2");
-    _system_np("echo 'asdf2' > out2");
-    _system("git add out2");
-    _system("git commit -m 'out2'");
+    tf_system("git init .");
+    tf_system("git checkout -b new-branch");
+    tf_system_np("echo 'asdf' > out");
+    tf_system("git add out");
+    tf_system("git commit -m 'out'");
+    tf_system("git checkout -b new-branch2");
+    tf_system_np("echo 'asdf2' > out2");
+    tf_system("git add out2");
+    tf_system("git commit -m 'out2'");
 
     my $other_remote_dir = tempdir(CLEANUP => 1);
     chdir $other_remote_dir;
-    _system("git clone file://$repo_dir ord");
+    tf_system("git clone file://$repo_dir ord");
     my $other_remote_repo = "$other_remote_dir/ord";
     chdir $other_remote_repo;
-    _system("git checkout -b new-branch4");
-    _system_np("echo 'asdf4' > out4");
-    _system("git add out4");
-    _system("git commit -m 'out4'");
+    tf_system("git checkout -b new-branch4");
+    tf_system_np("echo 'asdf4' > out4");
+    tf_system("git add out4");
+    tf_system("git commit -m 'out4'");
     sleep(1);
 
     my @emails;
@@ -118,10 +100,10 @@ SKIP: {
               'No mail sent (no commits since initialisation) (2)');
 
     chdir $repo_dir;
-    _system("git checkout new-branch");
-    _system_np("echo 'asdf3' > out3");
-    _system("git add out3");
-    _system("git commit -m 'out3'");
+    tf_system("git checkout new-branch");
+    tf_system_np("echo 'asdf3' > out3");
+    tf_system("git add out3");
+    tf_system("git commit -m 'out3'");
 
     eval {
         $digest->update();
@@ -141,7 +123,7 @@ SKIP: {
     my $from = POSIX::strftime('%FT%T', gmtime(time()));
     @emails = ();
     chdir $other_remote_repo;
-    _system("git push -u origin new-branch4");
+    tf_system("git push -u origin new-branch4");
 
     eval {
         $digest->update();

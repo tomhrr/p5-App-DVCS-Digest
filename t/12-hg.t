@@ -9,26 +9,8 @@ plan tests => 10;
 
 use App::SCM::Digest::SCM::Hg;
 use File::Temp qw(tempdir);
-
-sub _system
-{
-    my ($cmd) = @_;
-
-    my $res = system("$cmd >/dev/null 2>&1");
-    if ($res != 0) {
-        die "Command ($cmd) failed: $res";
-    }
-}
-
-sub _system_np
-{
-    my ($cmd) = @_;
-
-    my $res = system("$cmd 2>&1");
-    if ($res != 0) {
-        die "Command ($cmd) failed: $res";
-    }
-}
+use lib './t/lib';
+use TestFunctions qw(tf_system tf_system_np);
 
 SKIP: {
     my $hg = eval { App::SCM::Digest::SCM::Hg->new(); };
@@ -38,17 +20,17 @@ SKIP: {
 
     my $repo_dir = tempdir(CLEANUP => 1);
     chdir $repo_dir;
-    _system("hg init .");
+    tf_system("hg init .");
 
     $hg->open_repository($repo_dir);
     my @branches = @{$hg->branches()};
     is_deeply(\@branches, [],
               'No branches found in repository');
 
-    _system("hg branch new-branch");
-    _system_np("echo 'asdf' > out");
-    _system("hg add out");
-    _system("hg commit -m 'out'");
+    tf_system("hg branch new-branch");
+    tf_system_np("echo 'asdf' > out");
+    tf_system("hg add out");
+    tf_system("hg commit -m 'out'");
 
     my $repo_holder = tempdir(CLEANUP => 1);
     chdir $repo_holder;
@@ -64,10 +46,10 @@ SKIP: {
     is($hg2->branch_name(), 'new-branch',
         'Current branch name is correct');
 
-    _system("hg branch new-branch2");
-    _system_np("echo 'asdf2' > out2");
-    _system("hg add out2");
-    _system("hg commit -m 'out2'");
+    tf_system("hg branch new-branch2");
+    tf_system_np("echo 'asdf2' > out2");
+    tf_system("hg add out2");
+    tf_system("hg commit -m 'out2'");
 
     is($hg2->branch_name(), 'new-branch2',
         'Current branch name is correct (switched)');
@@ -82,9 +64,9 @@ SKIP: {
               [],
               'No commits found since most recent commit');
 
-    _system_np("echo 'asdf3' > out3");
-    _system("hg add out3");
-    _system("hg commit -m 'out3'");
+    tf_system_np("echo 'asdf3' > out3");
+    tf_system("hg add out3");
+    tf_system("hg commit -m 'out3'");
 
     my @commits = @{$hg2->commits_from($branches[0]->[0], $branches[0]->[1])};
     is(@commits, 1, 'Found one commit since original commit');
