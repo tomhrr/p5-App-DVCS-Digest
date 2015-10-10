@@ -1,4 +1,4 @@
-# App-SCM-Digest
+## App-SCM-Digest
 
 Provides for sending source control management (SCM) repository commit
 digest emails for a given period of time.  It does this based on the
@@ -7,7 +7,7 @@ when the commit was committed.  This means that, with scheduled
 digests, commits aren't omitted from the digest due to their having
 originally occurred at some other time.
 
-## Installation
+### Installation
 
 To install this module, run the following commands:
 
@@ -22,7 +22,7 @@ Alternatively, run `cpanm .` from within the checkout directory.  This
 will fetch and install module dependencies, if required.  See
 https://cpanmin.us.
 
-## Usage
+### Usage
 
 ```
 scm-digest [ options ]
@@ -71,7 +71,7 @@ specified are as follows:
 `timezone` is optional, and defaults to 'UTC'.  See
 `DateTime::TimeZone::Catalog` for a list of valid timezones.
 
-COPYRIGHT AND LICENCE
+### Copyright and licence
 
 Copyright (C) 2015 Tom Harrison
 
