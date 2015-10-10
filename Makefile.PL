@@ -11,6 +11,7 @@ my $output = WriteMakefile(
     ABSTRACT      => 'Send repository commit digest emails',
     LICENSE       => 'perl_5',
     PL_FILES      => {},
+    EXE_FILES     => ['bin/scm-digest'],
     MIN_PERL_VERSION => 5.006,
     CONFIGURE_REQUIRES => {
         'ExtUtils::MakeMaker' => 0,

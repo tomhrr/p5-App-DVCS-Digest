@@ -25,6 +25,10 @@ sub main
                'from=s', 'to=s');
 
     my $config_path = $options{'conf'} || '/etc/scm-digest.conf';
+    if (not -e $config_path) {
+        print STDERR "Configuration file not found.\n";
+        pod2usage(10);
+    }
     my $config = load_config($config_path);
 
     my $app = App::SCM::Digest->new($config);
@@ -36,7 +40,7 @@ sub main
     } elsif ($options{'send-email'}) {
         $app->send_email($app->get_email($options{'from'}, $options{'to'}))
     } else {
-        print STDERR "Invalid options.";
+        print STDERR "Invalid options.\n";
         pod2usage(10);
     }
 }
