@@ -30,20 +30,20 @@ scm-digest [ options ]
 
 Options:
 
- * --conf {config}
+ * `--conf {config}`
     * Set configuration path (defaults to /etc/scm-digest.conf).
- * --update
+ * `--update`
     * Initialise and update local repositories.
- * --get-email
+ * `--get-email`
     * Print digest email to standard output.
- * --send-email
+ * `--send-email`
     * Send digest email.
- * --from {time}
+ * `--from {time}`
     * Only include commits made after this time in digest.
- * --to {time}
+ * `--to {time}`
     * Only include commits made before this time in digest.
 
-Time format is '%Y-%m-%dT%H:%M:%S', e.g. '2000-12-25T22:00:00'.
+Time format is `%Y-%m-%dT%H:%M:%S`, e.g. `2000-12-25T22:00:00`.
 
 The configuration file must be in YAML format.  Options that may be
 specified are as follows:
