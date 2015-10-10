@@ -8,7 +8,6 @@ use App::SCM::Digest::SCM::Factory;
 use autodie;
 use DateTime;
 use DateTime::Format::Strptime;
-use DateTime::TimeZone;
 use Getopt::Long;
 use Email::MIME;
 use Email::Sender::Simple qw(sendmail);
