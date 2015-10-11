@@ -36,7 +36,10 @@ sub main
     if ($options{'update'}) {
         $app->update();
     } elsif ($options{'get-email'}) {
-        $app->get_email($options{'from'}, $options{'to'});
+        my $email = $app->get_email($options{'from'}, $options{'to'});
+        if ($email) {
+            print $email->as_string();
+        }
     } elsif ($options{'send-email'}) {
         $app->send_email($app->get_email($options{'from'}, $options{'to'}))
     } else {

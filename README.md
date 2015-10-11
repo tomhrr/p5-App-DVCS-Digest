@@ -9,7 +9,7 @@ originally occurred at some other time.
 
 ### Installation
 
-To install this module, run the following commands:
+Run the following commands from within the checkout directory:
 
 ```
 perl Makefile.PL
@@ -45,6 +45,12 @@ Options:
 
 Time format is `%Y-%m-%dT%H:%M:%S`, e.g. `2000-12-25T22:00:00`.
 
+If `get-email` or `send-email` are used without `from` and `to`
+arguments, then `from` will default to one day ago, and `to` will
+default to the current time.  If only `from` is provided, then there
+will be no upper bound on the commit date.  If only `to` is provided,
+then there will be no lower bound on the commit date.
+
 The configuration file must be in YAML format.  Options that may be
 specified are as follows:
 
@@ -54,7 +60,7 @@ specified are as follows:
   timezone:         UTC
   headers:
     from: From Address <from@example.org>
-    to:   To Address <to@example.org>
+    To:   To Address <to@example.org>
     ...
   repositories:
     - name: test
@@ -66,10 +72,29 @@ specified are as follows:
       ...
 ```
 
-`db_path`, `repository_path`, and `repositories` are mandatory options.
+`db_path`, `repository_path`, and `repositories` are the mandatory
+configuration entries.  Paths must be absolute.
 
 `timezone` is optional, and defaults to 'UTC'.  See
 `DateTime::TimeZone::Catalog` for a list of valid timezones.
+
+### Example
+
+```
+user@host:~$ cd /tmp
+user@host:tmp$ mkdir db
+user@host:tmp$ mkdir repos
+user@host:tmp$ cat << EOF >> config.yml
+> db_path: /tmp/db
+> repository_path: /tmp/repos
+> repositories:
+>   - name: scm-digest
+>     url: https://github.com/tomhrr/p5-App-SCM-Digest
+>     type: git
+> EOF
+user@host:tmp$ scm-digest --conf /tmp/config.yml --update
+user@host:tmp$ scm-digest --conf /tmp/config.yml --get-email | mail -s diff user@host
+```
 
 ### Copyright and licence
 

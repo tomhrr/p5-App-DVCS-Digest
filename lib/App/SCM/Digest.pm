@@ -74,8 +74,7 @@ sub _init
                 next;
             }
             open my $fh, '>', $branch_db_path;
-            my $time = ($pre_existing ? time() : 0);
-            print $fh POSIX::strftime('%FT%T', gmtime($time)).".$commit\n";
+            print $fh POSIX::strftime('%FT%T', time()).".$commit\n";
             close $fh;
         }
     }
@@ -229,7 +228,7 @@ sub get_email
     }
 
     my $email = Email::MIME->create(
-        header_str => [ %{$config->{'headers'}} ],
+        header_str => [ %{$config->{'headers'} || {}} ],
         parts => [
             Email::MIME->create(
                 attributes => {
@@ -358,9 +357,7 @@ repository-branch pair.  These databases record the time at which each
 commit was received.
 
 When initialising a particular database, only the latest commit is
-stored, with a time of '0000-00-00T00:00:00'.  Subsequent updates
-record subsequent commits with the current time, i.e., the time at
-which the update command is running.
+stored.  Subsequent updates record all subsequent commits.
 
 =item B<get_email>
 
