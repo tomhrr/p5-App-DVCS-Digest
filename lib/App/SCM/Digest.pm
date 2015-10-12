@@ -14,6 +14,8 @@ use File::Temp;
 use List::Util qw(first);
 use POSIX qw();
 
+use constant PATTERN => '%FT%T';
+
 our $VERSION = 0.01;
 
 sub new
@@ -43,17 +45,24 @@ sub _slurp
     return join '', @lines;
 }
 
+sub _strftime
+{
+    my ($time) = @_;
+
+    return POSIX::strftime(PATTERN, gmtime($time));
+}
+
 sub _init
 {
     my ($self) = @_;
 
     my $config = $self->{'config'};
 
-    my $repo_path = $config->{'repository_path'};
-    my $db_path = $config->{'db_path'};
-    my $repositories = $config->{'repositories'};
+    my ($repo_path, $db_path, $repositories) =
+        @{$config}{qw(repository_path db_path repositories)};
+
     for my $repository (@{$repositories}) {
-        chdir $repo_path or die $!;
+        chdir $repo_path;
         my ($name, $url, $type) = @{$repository}{qw(name url type)};
         my $impl = _impl($type);
         my $pre_existing = (-e $name);
@@ -73,7 +82,7 @@ sub _init
                 next;
             }
             open my $fh, '>', $branch_db_path;
-            print $fh POSIX::strftime('%FT%T', gmtime(time())).".$commit\n";
+            print $fh _strftime(time()).".$commit\n";
             close $fh;
         }
     }
@@ -87,15 +96,14 @@ sub _update
 
     my $config = $self->{'config'};
 
-    my $repo_path = $config->{'repository_path'};
-    my $db_path = $config->{'db_path'};
-    my $repositories = $config->{'repositories'};
-    my $current_branch;
+    my ($repo_path, $db_path, $repositories) =
+        @{$config}{qw(repository_path db_path repositories)};
+
     for my $repository (@{$repositories}) {
-        chdir $repo_path or die $!;
+        chdir $repo_path;
         my ($name, $type) = @{$repository}{qw(name type)};
         my $impl = _impl($type);
-        eval { $impl->open_repository($name); };
+        eval { $impl->open_repository($name) };
         if (my $error = $@) {
             die "Unable to open repository '$name': $error";
         }
@@ -115,7 +123,7 @@ sub _update
                 die "Unable to find commit ID in database.";
             }
             my @new_commits = @{$impl->commits_from($branch_name, $commit)};
-            my $time = POSIX::strftime('%FT%T', gmtime(time()));
+            my $time = _strftime(time());
             open my $fh, '>>', $branch_db_path;
             for my $new_commit (@new_commits) {
                 print $fh "$time.$new_commit\n";
@@ -136,49 +144,64 @@ sub update
     return 1;
 }
 
-sub get_email
+sub _process_bounds
 {
     my ($self, $from, $to) = @_;
 
     my $time = time();
     if (not defined $from and not defined $to) {
-        $from = POSIX::strftime('%FT%T', gmtime($time - 86400));
-        $to   = POSIX::strftime('%FT%T', gmtime($time));
+        $from = _strftime($time - 86400);
+        $to   = _strftime($time);
     } elsif (not defined $from) {
-        $from = POSIX::strftime('%FT%T', gmtime(0));
+        $from = _strftime(0);
     } elsif (not defined $to) {
-        $to = POSIX::strftime('%FT%T', gmtime($time));
+        $to   = _strftime($time);
     }
 
-    my $ft = File::Temp->new();
-    my @commit_data;
     my $config = $self->{'config'};
-
     my $tz = $config->{'timezone'} || 'UTC';
+
     my $strp =
-        DateTime::Format::Strptime->new(pattern   => '%FT%T',
+        DateTime::Format::Strptime->new(pattern   => PATTERN,
                                         time_zone => $tz);
-    my $from_dt = $strp->parse_datetime($from);
-    my $to_dt   = $strp->parse_datetime($to);
+
+    my ($from_dt, $to_dt) =
+        map { $strp->parse_datetime($_) }
+            ($from, $to);
     if (not $from_dt) {
         die "Invalid 'from' time provided.";
     }
     if (not $to_dt) {
         die "Invalid 'to' time provided.";
     }
-    $from_dt->set_time_zone('UTC');
-    $to_dt->set_time_zone('UTC');
-    $from = $from_dt->strftime('%FT%T');
-    $to = $to_dt->strftime('%FT%T');
 
-    my $repo_path = $config->{'repository_path'};
-    my $db_path = $config->{'db_path'};
-    my $repositories = $config->{'repositories'};
+    ($from, $to) =
+        map { $_->set_time_zone('UTC');
+              $_->strftime(PATTERN) }
+            ($from_dt, $to_dt);
+
+    return ($from, $to);
+}
+
+sub get_email
+{
+    my ($self, $from, $to) = @_;
+
+    my $config = $self->{'config'};
+
+    my ($repo_path, $db_path, $repositories) =
+        @{$config}{qw(repository_path db_path repositories)};
+
+    ($from, $to) = $self->_process_bounds($from, $to);
+
+    my $output_ft = File::Temp->new();
+    my @commit_data;
+
     for my $repository (@{$repositories}) {
-        chdir $repo_path or die $!;
+        chdir $repo_path;
         my ($name, $type) = @{$repository}{qw(name type)};
         my $impl = _impl($type);
-        eval { $impl->open_repository($name); };
+        eval { $impl->open_repository($name) };
         if (my $error = $@) {
             die "Unable to open repository '$name': $error";
         }
@@ -203,24 +226,24 @@ sub get_email
             if (not @commits) {
                 next;
             }
-            print $ft "Repository: $name\n".
-                      "Branch:     $branch_name\n\n";
+            print $output_ft "Repository: $name\n".
+                             "Branch:     $branch_name\n\n";
             for my $commit (@commits) {
                 my ($time, $id) = @{$commit};
                 $time =~ s/T/ /;
-                print $ft "Pulled at: $time\n";
-                print $ft @{$impl->show($id)};
-                print $ft "\n";
+                print $output_ft "Pulled at: $time\n";
+                print $output_ft @{$impl->show($id)};
+                print $output_ft "\n";
                 my $att_ft = File::Temp->new();
                 push @commit_data, [$name, $branch_name, $id, $att_ft];
                 print $att_ft @{$impl->show_all($id)};
                 $att_ft->flush();
             }
-            print $ft "\n";
+            print $output_ft "\n";
         }
         $impl->checkout($current_branch);
     }
-    $ft->flush();
+    $output_ft->flush();
 
     if (not @commit_data) {
         return;
@@ -237,7 +260,7 @@ sub get_email
                     encoding     => 'quoted-printable',
                     filename     => 'log.txt',
                 },
-                body_str => _slurp($ft)
+                body_str => _slurp($output_ft)
             ),
             map {
                 my ($name, $entry, $id, $att_ft) = @{$_};
