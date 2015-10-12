@@ -41,15 +41,6 @@ SKIP: {
     tf_system("git commit -m 'out4'");
     sleep(1);
 
-    my @emails;
-    {
-        no warnings;
-        no strict 'refs';
-        *{'App::SCM::Digest::sendmail'} = sub {
-            push @emails, $_[0];
-        };
-    }
-
     my $db_path   = tempdir(CLEANUP => 1);
     my $repo_path = tempdir(CLEANUP => 1);
 
@@ -81,23 +72,25 @@ SKIP: {
     like($@, qr/Unable to open repository 'test'/,
         'Got correct error message');
 
+    my $email;
     eval {
         $digest->update();
-        $digest->send_email($digest->get_email());
+        $email = $digest->get_email();
     };
-    ok((not $@), 'Updated database and attempted to send mail');
+    ok((not $@), 'Updated database and attempted to generate email');
     diag $@ if $@;
-    is_deeply(\@emails, [],
-              'No mail sent (no commits since initialisation)');
+    ok($email, 'Email generated for initial commit');
+    my $email_content = join "\n", map { $_->body_str() } $email->parts();
+    like($email_content, qr/asdf\s*$/m,
+        'Email contains content from initial commit');
 
     eval {
         $digest->update();
-        $digest->send_email($digest->get_email());
+        $email = $digest->get_email();
     };
-    ok((not $@), 'Updated database and attempted to send mail (2)');
+    ok((not $@), 'Updated database and attempted to generate email (2)');
     diag $@ if $@;
-    is_deeply(\@emails, [],
-              'No mail sent (no commits since initialisation) (2)');
+    ok($email, 'Email generated for initial commit (2)');
 
     chdir $repo_dir;
     tf_system("git checkout new-branch");
@@ -107,77 +100,74 @@ SKIP: {
 
     eval {
         $digest->update();
-        $digest->send_email($digest->get_email());
+        $email = $digest->get_email();
     };
-    ok((not $@), 'Updated database and sent mail');
+    ok((not $@), 'Updated database and generated email');
     diag $@ if $@;
-    is(@emails, 1, 'Email sent');
+    ok($email, 'Email generated');
 
-    my $email_content = join "\n", map { $_->body_str() } $emails[0]->parts();
+    $email_content = join "\n", map { $_->body_str() } $email->parts();
     like($email_content, qr/asdf3\s*$/m,
         'Email contains changed content');
-    unlike($email_content, qr/asdf\s*$/m,
-        'Email does not contain initialisation content');
 
     sleep(1);
     my $from = POSIX::strftime('%FT%T', gmtime(time()));
-    @emails = ();
+    $email = undef;
     chdir $other_remote_repo;
     tf_system("git push -u origin new-branch4");
 
     eval {
         $digest->update();
-        $digest->send_email($digest->get_email($from));
+        $email = $digest->get_email($from);
     };
-    ok((not $@), "Updated database and sent mail ('from' provided)");
+    ok((not $@), "Updated database and generated email ('from' provided)");
     diag $@ if $@;
-    is(@emails, 1, 'Email sent');
+    ok($email, 'Email generated');
 
-    $email_content = join "\n", map { $_->body_str() } $emails[0]->parts();
+    $email_content = join "\n", map { $_->body_str() } $email->parts();
     like($email_content, qr/asdf4\s*$/m,
         'Email contains changed content');
     unlike($email_content, qr/asdf3\s*$/m,
         'Email does not contain previous changed content');
 
-    @emails = ();
+    $email = undef;
     eval {
-        $digest->send_email($digest->get_email('0000-01-01T00:00:00'));
+        $email = $digest->get_email('0000-01-01T00:00:00');
     };
-    ok((not $@), "Sent email for all commits (zero 'from' provided)");
+    ok((not $@), "Generated email for all commits (zero 'from' provided)");
     diag $@ if $@;
-    is(@emails, 1, 'Email sent');
+    ok($email, 'Email generated');
 
-    $email_content = join "\n", map { $_->body_str() } $emails[0]->parts();
+    $email_content = join "\n", map { $_->body_str() } $email->parts();
     like($email_content, qr/asdf3\s*$/m,
         'Email contains changed content');
     like($email_content, qr/asdf\s*$/m,
         'Email contains initialisation content');
 
-    @emails = ();
+    $email = undef;
     eval {
-        $digest->send_email($digest->get_email(undef, '9999-01-01T00:00:00'));
+        $email = $digest->get_email(undef, '9999-01-01T00:00:00');
     };
-    ok((not $@), 'Sent email for all commits (to provided)');
+    ok((not $@), 'Generated email for all commits (to provided)');
     diag $@ if $@;
-    is(@emails, 1, 'Email sent');
+    ok($email, 'Email generated');
 
-    $email_content = join "\n", map { $_->body_str() } $emails[0]->parts();
+    $email_content = join "\n", map { $_->body_str() } $email->parts();
     like($email_content, qr/asdf3\s*$/m,
         'Email contains changed content');
     like($email_content, qr/asdf\s*$/m,
         'Email contains initialisation content');
 
-    @emails = ();
+    $email = undef;
     eval {
-        $digest->send_email(
+        $email =
             $digest->get_email('0000-01-01T00:00:00', '9999-01-01T00:00:00')
-        );
     };
-    ok((not $@), 'Sent email for all commits (both provided)');
+    ok((not $@), 'Generated email for all commits (both provided)');
     diag $@ if $@;
-    is(@emails, 1, 'Email sent');
+    ok($email, 'Email generated');
 
-    $email_content = join "\n", map { $_->body_str() } $emails[0]->parts();
+    $email_content = join "\n", map { $_->body_str() } $email->parts();
     like($email_content, qr/asdf3\s*$/m,
         'Email contains changed content');
     like($email_content, qr/asdf\s*$/m,
@@ -189,7 +179,7 @@ SKIP: {
 
     eval {
         $digest->update();
-        $digest->send_email($digest->get_email());
+        $digest->get_email();
     };
     ok($@, 'Unable to process when database corrupt');
     like($@, qr/Unable to find commit ID in database/,

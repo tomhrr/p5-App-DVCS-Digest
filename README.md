@@ -1,11 +1,11 @@
 ## App-SCM-Digest
 
-Provides for sending source control management (SCM) repository commit
-digest emails for a given period of time.  It does this based on the
-time when the commit was pulled into the local repository, rather than
-when the commit was committed.  This means that, with scheduled
-digests, commits aren't omitted from the digest due to their having
-originally occurred at some other time.
+Provides for generating source control management (SCM) repository
+commit digest emails for a given period of time.  It does this based
+on the time when the commit was pulled into the local repository,
+rather than when the commit was committed.  This means that, with
+scheduled digests, commits aren't omitted from the digest due to their
+having originally occurred at some other time.
 
 ### Installation
 
@@ -36,8 +36,6 @@ Options:
     * Initialise and update local repositories.
  * `--get-email`
     * Print digest email to standard output.
- * `--send-email`
-    * Send digest email.
  * `--from {time}`
     * Only include commits made after this time in digest.
  * `--to {time}`
@@ -45,11 +43,11 @@ Options:
 
 Time format is `%Y-%m-%dT%H:%M:%S`, e.g. `2000-12-25T22:00:00`.
 
-If `get-email` or `send-email` are used without `from` and `to`
-arguments, then `from` will default to one day ago, and `to` will
-default to the current time.  If only `from` is provided, then there
-will be no upper bound on the commit date.  If only `to` is provided,
-then there will be no lower bound on the commit date.
+If `get-email` is used without `from` and `to` arguments, then `from`
+will default to one day ago, and `to` will default to the current
+time.  If only `from` is provided, then there will be no upper bound
+on the commit date.  If only `to` is provided, then there will be no
+lower bound on the commit date.
 
 The configuration file must be in YAML format.  Options that may be
 specified are as follows:
@@ -59,7 +57,7 @@ specified are as follows:
   repository_path:  /path/to/local/repositories
   timezone:         UTC
   headers:
-    from: From Address <from@example.org>
+    From: From Address <from@example.org>
     To:   To Address <to@example.org>
     ...
   repositories:

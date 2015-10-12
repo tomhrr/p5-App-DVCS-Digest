@@ -21,8 +21,7 @@ sub main
 {
     my %options;
     GetOptions(\%options, 'conf=s',
-               'update', 'get-email', 'send-email',
-               'from=s', 'to=s');
+               'update', 'get-email', 'from=s', 'to=s');
 
     my $config_path = $options{'conf'} || '/etc/scm-digest.conf';
     if (not -e $config_path) {
@@ -40,8 +39,6 @@ sub main
         if ($email) {
             print $email->as_string();
         }
-    } elsif ($options{'send-email'}) {
-        $app->send_email($app->get_email($options{'from'}, $options{'to'}))
     } else {
         print STDERR "Invalid options.\n";
         pod2usage(10);
@@ -67,7 +64,6 @@ Options:
   --conf {config}  Set configuration path (defaults to /etc/scm-digest.conf)
   --update         Initialise and update local repositories
   --get-email      Print digest email to standard output
-  --send-email     Send digest email
   --from {time}    Only include commits made after this time in digest
   --to {time}      Only include commits made before this time in digest
 
@@ -92,9 +88,10 @@ specified are as follows:
       type: [git|hg]
       ...
 
-db_path, repository_path, and repositories are mandatory options.
+C<db_path>, C<repository_path>, and C<repositories> are mandatory
+options.
 
-timezone is optional, and defaults to 'UTC'.  See
-DateTime::TimeZone::Catalog for a list of valid timezones.
+C<timezone> is optional, and defaults to 'UTC'.  See
+L<DateTime::TimeZone::Catalog> for a list of valid timezones.
 
 =cut

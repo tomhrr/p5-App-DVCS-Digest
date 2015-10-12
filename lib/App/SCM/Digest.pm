@@ -10,7 +10,6 @@ use DateTime;
 use DateTime::Format::Strptime;
 use Getopt::Long;
 use Email::MIME;
-use Email::Sender::Simple qw(sendmail);
 use File::Temp;
 use List::Util qw(first);
 use POSIX qw();
@@ -74,7 +73,7 @@ sub _init
                 next;
             }
             open my $fh, '>', $branch_db_path;
-            print $fh POSIX::strftime('%FT%T', time()).".$commit\n";
+            print $fh POSIX::strftime('%FT%T', gmtime(time())).".$commit\n";
             close $fh;
         }
     }
@@ -260,21 +259,6 @@ sub get_email
     return $email;
 }
 
-sub send_email
-{
-    my ($self, $email) = @_;
-
-    # Return here, rather than throwing an error, so that no
-    # null-check equivalent is required in the caller.
-    if (not $email) {
-        return;
-    }
-
-    sendmail($email);
-
-    return 1;
-}
-
 1;
 
 __END__
@@ -366,12 +350,6 @@ representing the lower and upper bounds of a time period, as its
 arguments.  Returns an L<Email::MIME> object containing all of the
 commits pulled within that time period, using the details from the
 C<headers> entry in the configuration to construct the email.
-
-=item B<send_email>
-
-Takes the result of calling L<get_email>, and sends it.
-L<Email::Sender::Simple> is used for sending, so the environment
-overrides that it supports may be used here.
 
 =back
 
