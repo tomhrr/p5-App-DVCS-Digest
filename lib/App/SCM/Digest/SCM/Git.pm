@@ -60,6 +60,7 @@ sub branches
     my $current_branch = $self->branch_name();
     for my $branch (@branches) {
         $self->checkout($branch);
+        $self->pull();
         my $commit = `git log -1 --format="%H" $branch`;
         chomp $commit;
         push @results, [ $branch => $commit ];
@@ -86,7 +87,6 @@ sub checkout
     my ($self, $branch) = @_;
 
     system("git checkout $branch >/dev/null 2>&1");
-    system("git pull >/dev/null 2>&1");
 
     return 1;
 }
