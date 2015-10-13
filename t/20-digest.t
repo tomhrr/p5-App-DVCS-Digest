@@ -5,12 +5,12 @@ use strict;
 use warnings FATAL => 'all';
 use Test::More;
 
-plan tests => 31;
+plan tests => 41;
 
 use App::SCM::Digest;
+use App::SCM::Digest::Utils qw(system_ad system_ad_op);
+
 use File::Temp qw(tempdir);
-use lib './t/lib';
-use TestFunctions qw(tf_system tf_system_np);
 
 SKIP: {
     eval { App::SCM::Digest::SCM::Git->new(); };
@@ -20,25 +20,48 @@ SKIP: {
 
     my $repo_dir = tempdir(CLEANUP => 1);
     chdir $repo_dir;
-    tf_system("git init .");
-    tf_system("git checkout -b new-branch");
-    tf_system_np("echo 'asdf' > out");
-    tf_system("git add out");
-    tf_system("git commit -m 'out'");
-    tf_system("git checkout -b new-branch2");
-    tf_system_np("echo 'asdf2' > out2");
-    tf_system("git add out2");
-    tf_system("git commit -m 'out2'");
+    system_ad("git init .");
+    system_ad("git checkout -b new-branch");
+    system_ad_op("echo 'asdf' > out");
+    system_ad("git add out");
+    system_ad("git commit -m 'out'");
+    system_ad("git checkout -b new-branch2");
+    system_ad_op("echo 'asdf2' > out2");
+    system_ad("git add out2");
+    system_ad("git commit -m 'out2'");
 
     my $other_remote_dir = tempdir(CLEANUP => 1);
     chdir $other_remote_dir;
-    tf_system("git clone file://$repo_dir ord");
+    system_ad("git clone file://$repo_dir ord");
     my $other_remote_repo = "$other_remote_dir/ord";
     chdir $other_remote_repo;
-    tf_system("git checkout -b new-branch4");
-    tf_system_np("echo 'asdf4' > out4");
-    tf_system("git add out4");
-    tf_system("git commit -m 'out4'");
+    system_ad("git checkout -b new-branch4");
+    system_ad_op("echo 'asdf4' > out4");
+    system_ad("git add out4");
+    system_ad("git commit -m 'out4'");
+
+    my $hg_repo_dir = tempdir(CLEANUP => 1);
+    chdir $hg_repo_dir;
+    system_ad("hg init .");
+    system_ad("hg branch new-branch");
+    system_ad_op("echo 'qwer' > out");
+    system_ad("hg add out");
+    system_ad("hg commit -m 'out'");
+    system_ad("hg branch new-branch2");
+    system_ad_op("echo 'qwer2' > out");
+    system_ad("hg add out");
+    system_ad("hg commit -m 'out'");
+
+    my $hg_other_remote_dir = tempdir(CLEANUP => 1);
+    chdir $hg_other_remote_dir;
+    system_ad("hg clone file://$hg_repo_dir ord");
+    my $hg_other_remote_repo = "$hg_other_remote_dir/ord";
+    chdir $hg_other_remote_repo;
+    system_ad("hg branch new-branch4");
+    system_ad_op("echo 'qwer4' > out4");
+    system_ad("hg add out4");
+    system_ad("hg commit -m 'out4'");
+
     sleep(1);
 
     my $db_path   = tempdir(CLEANUP => 1);
@@ -54,7 +77,10 @@ SKIP: {
         repositories => [
             { name => 'test',
               url  => "file://$repo_dir",
-              type => 'git' }
+              type => 'git' },
+            { name => 'test2',
+              url  => "file://$hg_repo_dir",
+              type => 'hg' },
         ],
     );
 
@@ -82,7 +108,9 @@ SKIP: {
     ok($email, 'Email generated for initial commit');
     my $email_content = join "\n", map { $_->body_str() } $email->parts();
     like($email_content, qr/asdf\s*$/m,
-        'Email contains content from initial commit');
+        'Email contains content from initial commit (git)');
+    like($email_content, qr/qwer\s*$/m,
+        'Email contains content from initial commit (hg)');
 
     eval {
         $digest->update();
@@ -93,10 +121,16 @@ SKIP: {
     ok($email, 'Email generated for initial commit (2)');
 
     chdir $repo_dir;
-    tf_system("git checkout new-branch");
-    tf_system_np("echo 'asdf3' > out3");
-    tf_system("git add out3");
-    tf_system("git commit -m 'out3'");
+    system_ad("git checkout new-branch");
+    system_ad_op("echo 'asdf3' > out3");
+    system_ad("git add out3");
+    system_ad("git commit -m 'out3'");
+
+    chdir $hg_repo_dir;
+    system_ad("hg checkout new-branch");
+    system_ad_op("echo 'qwer3' > out3");
+    system_ad("hg add out3");
+    system_ad("hg commit -m 'out3'");
 
     eval {
         $digest->update();
@@ -108,13 +142,17 @@ SKIP: {
 
     $email_content = join "\n", map { $_->body_str() } $email->parts();
     like($email_content, qr/asdf3\s*$/m,
-        'Email contains changed content');
+        'Email contains changed content (git)');
+    like($email_content, qr/qwer3\s*$/m,
+        'Email contains changed content (hg)');
 
     sleep(1);
     my $from = POSIX::strftime('%FT%T', gmtime(time()));
     $email = undef;
     chdir $other_remote_repo;
-    tf_system("git push -u origin new-branch4");
+    system_ad("git push -u origin new-branch4");
+    chdir $hg_other_remote_repo;
+    system_ad("hg push -f");
 
     eval {
         $digest->update();
@@ -126,9 +164,13 @@ SKIP: {
 
     $email_content = join "\n", map { $_->body_str() } $email->parts();
     like($email_content, qr/asdf4\s*$/m,
-        'Email contains changed content');
+        'Email contains changed content (git)');
+    like($email_content, qr/qwer4\s*$/m,
+        'Email contains changed content (hg)');
     unlike($email_content, qr/asdf3\s*$/m,
-        'Email does not contain previous changed content');
+        'Email does not contain previous changed content (git)');
+    unlike($email_content, qr/qwer3\s*$/m,
+        'Email does not contain previous changed content (hg)');
 
     $email = undef;
     eval {
@@ -140,9 +182,13 @@ SKIP: {
 
     $email_content = join "\n", map { $_->body_str() } $email->parts();
     like($email_content, qr/asdf3\s*$/m,
-        'Email contains changed content');
+        'Email contains changed content (git)');
+    like($email_content, qr/qwer3\s*$/m,
+        'Email contains changed content (git)');
     like($email_content, qr/asdf\s*$/m,
-        'Email contains initialisation content');
+        'Email contains initialisation content (git)');
+    like($email_content, qr/qwer\s*$/m,
+        'Email contains initialisation content (hg)');
 
     $email = undef;
     eval {
@@ -154,9 +200,13 @@ SKIP: {
 
     $email_content = join "\n", map { $_->body_str() } $email->parts();
     like($email_content, qr/asdf3\s*$/m,
-        'Email contains changed content');
+        'Email contains changed content (git)');
+    like($email_content, qr/qwer3\s*$/m,
+        'Email contains changed content (git)');
     like($email_content, qr/asdf\s*$/m,
-        'Email contains initialisation content');
+        'Email contains initialisation content (git)');
+    like($email_content, qr/qwer\s*$/m,
+        'Email contains initialisation content (hg)');
 
     $email = undef;
     eval {
@@ -169,9 +219,13 @@ SKIP: {
 
     $email_content = join "\n", map { $_->body_str() } $email->parts();
     like($email_content, qr/asdf3\s*$/m,
-        'Email contains changed content');
+        'Email contains changed content (git)');
+    like($email_content, qr/qwer3\s*$/m,
+        'Email contains changed content (git)');
     like($email_content, qr/asdf\s*$/m,
-        'Email contains initialisation content');
+        'Email contains initialisation content (git)');
+    like($email_content, qr/qwer\s*$/m,
+        'Email contains initialisation content (hg)');
 
     open my $fh, '>', $db_path."/test/new-branch2" or die $!;
     print $fh "";

@@ -5,12 +5,12 @@ use strict;
 use warnings FATAL => 'all';
 use Test::More;
 
-plan tests => 10;
+plan tests => 12;
 
 use App::SCM::Digest::SCM::Git;
+use App::SCM::Digest::Utils qw(system_ad system_ad_op);
+
 use File::Temp qw(tempdir);
-use lib './t/lib';
-use TestFunctions qw(tf_system tf_system_np);
 
 SKIP: {
     my $git = eval { App::SCM::Digest::SCM::Git->new(); };
@@ -18,19 +18,23 @@ SKIP: {
         skip 'Git not available', 9;
     }
 
+    eval { $git->clone('invalid', 'invalid') };
+    ok($@, 'Died trying to clone invalid URL');
+    like($@, qr/Command.*failed/, 'Got expected error message');
+
     my $repo_dir = tempdir(CLEANUP => 1);
     chdir $repo_dir;
-    tf_system("git init .");
+    system_ad("git init .");
 
     $git->open_repository($repo_dir);
     my @branches = @{$git->branches()};
     is_deeply(\@branches, [],
               'No branches found in repository');
 
-    tf_system("git checkout -b new-branch");
-    tf_system_np("echo 'asdf' > out");
-    tf_system("git add out");
-    tf_system("git commit -m 'out'");
+    system_ad("git checkout -b new-branch");
+    system_ad_op("echo 'asdf' > out");
+    system_ad("git add out");
+    system_ad("git commit -m 'out'");
 
     my $repo_holder = tempdir(CLEANUP => 1);
     chdir $repo_holder;
@@ -46,10 +50,10 @@ SKIP: {
     is($git2->branch_name(), 'new-branch',
         'Current branch name is correct');
 
-    tf_system("git checkout -b new-branch2");
-    tf_system_np("echo 'asdf2' > out2");
-    tf_system("git add out2");
-    tf_system("git commit -m 'out2'");
+    system_ad("git checkout -b new-branch2");
+    system_ad_op("echo 'asdf2' > out2");
+    system_ad("git add out2");
+    system_ad("git commit -m 'out2'");
 
     is($git2->branch_name(), 'new-branch2',
         'Current branch name is correct (switched)');
@@ -64,9 +68,9 @@ SKIP: {
               [],
               'No commits found since most recent commit');
 
-    tf_system_np("echo 'asdf3' > out3");
-    tf_system("git add out3");
-    tf_system("git commit -m 'out3'");
+    system_ad_op("echo 'asdf3' > out3");
+    system_ad("git add out3");
+    system_ad("git commit -m 'out3'");
 
     my @commits = @{$git2->commits_from($branches[0]->[0], $branches[0]->[1])};
     is(@commits, 1, 'Found one commit since original commit');

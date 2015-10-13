@@ -3,6 +3,8 @@ package App::SCM::Digest::SCM::Git;
 use strict;
 use warnings;
 
+use App::SCM::Digest::Utils qw(system_ad);
+
 use autodie;
 
 sub new
@@ -23,7 +25,7 @@ sub clone
 {
     my ($self, $url, $name) = @_;
 
-    system("git clone $url $name >/dev/null 2>&1");
+    my $res = system_ad("git clone $url $name >/dev/null 2>&1");
 
     return 1;
 }
@@ -41,7 +43,7 @@ sub pull
 {
     my ($self) = @_;
 
-    system("git pull >/dev/null 2>&1");
+    system_ad("git pull >/dev/null 2>&1");
 
     return 1;
 }
@@ -65,7 +67,9 @@ sub branches
         chomp $commit;
         push @results, [ $branch => $commit ];
     }
-    $self->checkout($current_branch);
+    if ($current_branch ne 'HEAD') {
+        $self->checkout($current_branch);
+    }
 
     return \@results;
 }
@@ -86,7 +90,7 @@ sub checkout
 {
     my ($self, $branch) = @_;
 
-    system("git checkout $branch >/dev/null 2>&1");
+    system_ad("git checkout $branch >/dev/null 2>&1");
 
     return 1;
 }

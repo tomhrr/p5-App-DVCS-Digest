@@ -3,6 +3,8 @@ package App::SCM::Digest::SCM::Hg;
 use strict;
 use warnings;
 
+use App::SCM::Digest::Utils qw(system_ad);
+
 use autodie;
 
 sub new
@@ -23,10 +25,7 @@ sub clone
 {
     my ($self, $url, $name) = @_;
 
-    my $res = system("hg clone $url $name >/dev/null 2>&1");
-    if ($res != 0) {
-        die "Unable to clone $url.";
-    }
+    my $res = system_ad("hg clone $url $name >/dev/null 2>&1");
 
     return 1;
 }
@@ -44,10 +43,7 @@ sub pull
 {
     my ($self) = @_;
 
-    my $res = system("hg pull >/dev/null 2>&1");
-    if ($res != 0) {
-        die "Unable to pull.";
-    }
+    my $res = system_ad("hg pull >/dev/null 2>&1");
 
     return 1;
 }
@@ -57,17 +53,19 @@ sub branches
     my ($self) = @_;
 
     my $current = $self->branch_name();
-    my @data = `hg branches`;
+    my @branch_infos = `hg branches`;
     my @results;
-    for my $d (@data) {
-        chomp $d;
-        my ($entry, $commit) = ($d =~ /^(\S+?)\s+(\S+)/);
+    for my $branch_info (@branch_infos) {
+        chomp $branch_info;
+        my ($entry, $commit) = ($branch_info =~ /^(\S+?)\s+(\S+)/);
         $self->checkout($entry);
         $commit = `hg log --limit 1 --template '{node}'`;
         chomp $commit;
         push @results, [ $entry => $commit ];
     }
-    $self->checkout($current);
+    if ($current ne 'default') {
+        $self->checkout($current);
+    }
 
     return \@results;
 }
@@ -86,7 +84,7 @@ sub checkout
 {
     my ($self, $branch) = @_;
 
-    system("hg checkout $branch >/dev/null 2>&1");
+    system_ad("hg checkout $branch >/dev/null 2>&1");
 
     return 1;
 }
