@@ -25,7 +25,7 @@ sub clone
 {
     my ($self, $url, $name) = @_;
 
-    my $res = system_ad("git clone $url $name >/dev/null 2>&1");
+    my $res = system_ad("git clone $url $name");
 
     return 1;
 }
@@ -43,7 +43,7 @@ sub pull
 {
     my ($self) = @_;
 
-    system_ad("git pull >/dev/null 2>&1");
+    system_ad("git pull");
 
     return 1;
 }
@@ -90,7 +90,7 @@ sub checkout
 {
     my ($self, $branch) = @_;
 
-    system_ad("git checkout $branch >/dev/null 2>&1");
+    system_ad("git checkout $branch");
 
     return 1;
 }

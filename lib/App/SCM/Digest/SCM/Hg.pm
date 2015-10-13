@@ -25,7 +25,7 @@ sub clone
 {
     my ($self, $url, $name) = @_;
 
-    my $res = system_ad("hg clone $url $name >/dev/null 2>&1");
+    my $res = system_ad("hg clone $url $name");
 
     return 1;
 }
@@ -43,7 +43,7 @@ sub pull
 {
     my ($self) = @_;
 
-    my $res = system_ad("hg pull >/dev/null 2>&1");
+    my $res = system_ad("hg pull");
 
     return 1;
 }
@@ -84,7 +84,7 @@ sub checkout
 {
     my ($self, $branch) = @_;
 
-    system_ad("hg checkout $branch >/dev/null 2>&1");
+    system_ad("hg checkout $branch");
 
     return 1;
 }
