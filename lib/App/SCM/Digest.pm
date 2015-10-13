@@ -15,6 +15,12 @@ use List::Util qw(first);
 use POSIX qw();
 
 use constant PATTERN => '%FT%T';
+use constant EMAIL_ATTRIBUTES => (
+    content_type => 'text/plain',
+    disposition  => 'attachment',
+    charset      => 'UTF-8',
+    encoding     => 'quoted-printable',
+);
 
 our $VERSION = 0.01;
 
@@ -24,13 +30,6 @@ sub new
     my $self = { config => $config };
     bless $self, $class;
     return $self;
-}
-
-sub _impl
-{
-    my ($name) = @_;
-
-    return App::SCM::Digest::SCM::Factory->new($name);
 }
 
 sub _slurp
@@ -52,6 +51,36 @@ sub _strftime
     return POSIX::strftime(PATTERN, gmtime($time));
 }
 
+sub _impl
+{
+    my ($name) = @_;
+
+    return App::SCM::Digest::SCM::Factory->new($name);
+}
+
+sub _load_repository
+{
+    my ($repository) = @_;
+
+    my ($name, $url, $type) = @{$repository}{qw(name url type)};
+    my $impl = _impl($type);
+
+    return ($name, $impl);
+}
+
+sub _load_and_open_repository
+{
+    my ($repository) = @_;
+
+    my ($name, $impl) = _load_repository($repository);
+    eval { $impl->open_repository($name) };
+    if (my $error = $@) {
+        die "Unable to open repository '$name': $error";
+    }
+
+    return ($name, $impl);
+}
+
 sub _init
 {
     my ($self) = @_;
@@ -63,12 +92,11 @@ sub _init
 
     for my $repository (@{$repositories}) {
         chdir $repo_path;
-        my ($name, $url, $type) = @{$repository}{qw(name url type)};
-        my $impl = _impl($type);
+        my ($name, $impl) = _load_repository($repository);
         my $pre_existing = (-e $name);
         if (not $pre_existing) {
             mkdir "$db_path/$name";
-            $impl->clone($url, $name);
+            $impl->clone($repository->{'url'}, $name);
         }
         $impl->open_repository($name);
         if ($pre_existing) {
@@ -101,12 +129,7 @@ sub _update
 
     for my $repository (@{$repositories}) {
         chdir $repo_path;
-        my ($name, $type) = @{$repository}{qw(name type)};
-        my $impl = _impl($type);
-        eval { $impl->open_repository($name) };
-        if (my $error = $@) {
-            die "Unable to open repository '$name': $error";
-        }
+        my ($name, $impl) = _load_and_open_repository($repository);
         $impl->pull();
         my $current_branch = $impl->branch_name();
         my @branches = @{$impl->branches()};
@@ -183,6 +206,38 @@ sub _process_bounds
     return ($from, $to);
 }
 
+sub _load_commits
+{
+    my ($branch_db_path, $from, $to) = @_;
+
+    if (not -e $branch_db_path) {
+        die "Unable to find branch database ($branch_db_path).";
+    }
+    open my $fh, '<', $branch_db_path;
+    my @commits;
+    while (my $entry = <$fh>) {
+        chomp $entry;
+        my ($time, $id) = split /\./, $entry;
+        if (($time ge $from) and ($time le $to)) {
+            push @commits, [ $time, $id ];
+        }
+    }
+
+    return @commits;
+}
+
+sub _make_email_mime
+{
+    my ($ft, $filename) = @_;
+
+    return
+        Email::MIME->create(
+            attributes => { EMAIL_ATTRIBUTES,
+                            filename => $filename },
+            body_str   => _slurp($ft)
+        );
+}
+
 sub get_email
 {
     my ($self, $from, $to) = @_;
@@ -199,30 +254,14 @@ sub get_email
 
     for my $repository (@{$repositories}) {
         chdir $repo_path;
-        my ($name, $type) = @{$repository}{qw(name type)};
-        my $impl = _impl($type);
-        eval { $impl->open_repository($name) };
-        if (my $error = $@) {
-            die "Unable to open repository '$name': $error";
-        }
+        my ($name, $impl) = _load_and_open_repository($repository);
         my $current_branch = $impl->branch_name();
 
         my @branches = @{$impl->branches()};
         for my $branch (@branches) {
             my ($branch_name, $commit) = @{$branch};
             my $branch_db_path = "$db_path/$name/$branch_name";
-            if (not -e $branch_db_path) {
-                die "Unable to find branch database ($branch_db_path).";
-            }
-            open my $fh, '<', $branch_db_path;
-            my @commits;
-            while (my $entry = <$fh>) {
-                chomp $entry;
-                my ($time, $id) = split /\./, $entry;
-                if (($time ge $from) and ($time le $to)) {
-                    push @commits, [ $time, $id ];
-                }
-            }
+            my @commits = _load_commits($branch_db_path, $from, $to);
             if (not @commits) {
                 next;
             }
@@ -231,18 +270,21 @@ sub get_email
             for my $commit (@commits) {
                 my ($time, $id) = @{$commit};
                 $time =~ s/T/ /;
-                print $output_ft "Pulled at: $time\n";
-                print $output_ft @{$impl->show($id)};
-                print $output_ft "\n";
+                print $output_ft "Pulled at: $time\n".
+                                 (join '', @{$impl->show($id)}).
+                                 "\n";
+
                 my $att_ft = File::Temp->new();
-                push @commit_data, [$name, $branch_name, $id, $att_ft];
                 print $att_ft @{$impl->show_all($id)};
                 $att_ft->flush();
+
+                push @commit_data, [$name, $branch_name, $id, $att_ft];
             }
             print $output_ft "\n";
         }
         $impl->checkout($current_branch);
     }
+
     $output_ft->flush();
 
     if (not @commit_data) {
@@ -252,29 +294,11 @@ sub get_email
     my $email = Email::MIME->create(
         header_str => [ %{$config->{'headers'} || {}} ],
         parts => [
-            Email::MIME->create(
-                attributes => {
-                    content_type => 'text/plain',
-                    disposition  => 'attachment',
-                    charset      => 'UTF-8',
-                    encoding     => 'quoted-printable',
-                    filename     => 'log.txt',
-                },
-                body_str => _slurp($output_ft)
-            ),
+            _make_email_mime($output_ft, 'log.txt'),
             map {
-                my ($name, $entry, $id, $att_ft) = @{$_};
-                my $email = Email::MIME->create(
-                    attributes => {
-                        content_type => 'text/plain',
-                        disposition  => 'attachment',
-                        charset      => 'UTF-8',
-                        encoding     => 'quoted-printable',
-                        filename     => "$name-$entry-$id.diff",
-                    },
-                    body_str => _slurp($att_ft)
-                );
-                $email
+                my ($name, $branch_name, $id, $att_ft) = @{$_};
+                _make_email_mime($att_ft,
+                                 "$name-$branch_name-$id.diff"),
             } @commit_data
         ]
     );
