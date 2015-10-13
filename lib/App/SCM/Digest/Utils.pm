@@ -22,7 +22,12 @@ sub system_ad
 {
     my ($cmd) = @_;
 
-    return _system_ad("$cmd >/dev/null 2>&1");
+    my $redirect =
+        ($ENV{'APP_SCM_DIGEST_DEBUG'}
+            ? ''
+            : '>/dev/null');
+
+    return _system_ad("$cmd $redirect 2>&1");
 }
 
 sub system_ad_op
