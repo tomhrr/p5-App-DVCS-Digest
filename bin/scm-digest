@@ -76,8 +76,8 @@ specified are as follows:
   repository_path:  /path/to/local/repositories
   timezone:         UTC
   headers:
-    from: From Address <from@example.org>
-    to:   To Address <to@example.org>
+    From: From Address <from@example.org>
+    To:   To Address <to@example.org>
     ...
   repositories:
     - name: test
