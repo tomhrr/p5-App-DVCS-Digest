@@ -29,7 +29,7 @@ SKIP: {
     system_ad_op("echo 'asdf' > out");
     system_ad("git add out");
     system_ad("git commit -m 'out'");
-    system_ad("git checkout -b new-branch2");
+    system_ad("git checkout -b new-branch2/test");
     system_ad_op("echo 'asdf2' > out2");
     system_ad("git add out2");
     system_ad("git commit -m 'out2'");
@@ -51,7 +51,7 @@ SKIP: {
     system_ad_op("echo 'qwer' > out");
     system_ad("hg add out");
     system_ad("hg commit -m 'out'");
-    system_ad("hg branch new-branch2");
+    system_ad("hg branch new-branch2/test");
     system_ad_op("echo 'qwer2' > out");
     system_ad("hg add out");
     system_ad("hg commit -m 'out'");
@@ -231,7 +231,7 @@ SKIP: {
     like($email_content, qr/qwer\s*$/m,
         'Email contains initialisation content (hg)');
 
-    open my $fh, '>', $db_path."/test/new-branch2" or die $!;
+    open my $fh, '>', $db_path."/test/new-branch2/test" or die $!;
     print $fh "";
     close $fh;
 

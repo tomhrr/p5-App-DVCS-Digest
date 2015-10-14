@@ -3,6 +3,7 @@ package App::SCM::Digest;
 use strict;
 use warnings;
 
+use App::SCM::Digest::Utils qw(system_ad);
 use App::SCM::Digest::SCM::Factory;
 
 use autodie;
@@ -108,6 +109,12 @@ sub _init
             my $branch_db_path = "$db_path/$name/$branch_name";
             if (-e $branch_db_path) {
                 next;
+            }
+            my @branch_db_segments = split /\//, $branch_db_path;
+            pop @branch_db_segments;
+            my $branch_db_parent = join '/', @branch_db_segments;
+            if (not -e $branch_db_parent) {
+                system_ad("mkdir -p $branch_db_parent");
             }
             open my $fh, '>', $branch_db_path;
             print $fh _strftime(time()).".$commit\n";
