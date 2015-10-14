@@ -15,7 +15,11 @@ use File::Temp qw(tempdir);
 SKIP: {
     eval { App::SCM::Digest::SCM::Git->new(); };
     if ($@) {
-        skip 'Git not available', 9;
+        skip 'Git not available', 41;
+    }
+    eval { App::SCM::Digest::SCM::Hg->new(); };
+    if ($@) {
+        skip 'Mercurial not available', 41;
     }
 
     my $repo_dir = tempdir(CLEANUP => 1);

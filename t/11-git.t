@@ -15,7 +15,7 @@ use File::Temp qw(tempdir);
 SKIP: {
     my $git = eval { App::SCM::Digest::SCM::Git->new(); };
     if ($@) {
-        skip 'Git not available', 9;
+        skip 'Git not available', 12;
     }
 
     eval { $git->clone('invalid', 'invalid') };

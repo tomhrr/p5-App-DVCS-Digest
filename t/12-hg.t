@@ -15,7 +15,7 @@ use File::Temp qw(tempdir);
 SKIP: {
     my $hg = eval { App::SCM::Digest::SCM::Hg->new(); };
     if ($@) {
-        skip 'Mercurial not available', 9;
+        skip 'Mercurial not available', 12;
     }
 
     eval { $hg->clone('invalid', 'invalid') };
