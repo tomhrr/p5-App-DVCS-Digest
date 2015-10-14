@@ -53,7 +53,7 @@ sub branches
     my ($self) = @_;
 
     my @branches =
-        map  { s/^\s+.*\///; s/\s+$//; $_ }
+        map  { s/^\s+//; s/^origin\///; s/\s+$//; $_ }
         grep { !/ -> / }
         map  { chomp; $_ }
             `git branch -r`;
