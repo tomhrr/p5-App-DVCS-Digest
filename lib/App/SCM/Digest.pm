@@ -183,18 +183,20 @@ sub _process_bounds
 {
     my ($self, $from, $to) = @_;
 
-    my $time = time();
+    my $config = $self->{'config'};
+    my $tz = $config->{'timezone'} || 'UTC';
+
     if (not defined $from and not defined $to) {
-        $from = _strftime($time - 86400);
-        $to   = _strftime($time);
+        $from = DateTime->now(time_zone => $tz)
+                        ->subtract(days => 1)
+                        ->strftime(PATTERN);
+        $to   = DateTime->now(time_zone => $tz)
+                        ->strftime(PATTERN);
     } elsif (not defined $from) {
         $from = '0000-01-01T00:00:00';
     } elsif (not defined $to) {
         $to   = '9999-12-31T23:59:59';
     }
-
-    my $config = $self->{'config'};
-    my $tz = $config->{'timezone'} || 'UTC';
 
     my $strp =
         DateTime::Format::Strptime->new(pattern   => PATTERN,

@@ -91,7 +91,7 @@ user@host:tmp$ cat << EOF >> config.yml
 >     type: git
 > EOF
 user@host:tmp$ scm-digest --conf /tmp/config.yml --update
-user@host:tmp$ scm-digest --conf /tmp/config.yml --get-email | sendmail -s diff user@host
+user@host:tmp$ scm-digest --conf /tmp/config.yml --get-email | sendmail user@host
 ```
 
 ### Copyright and licence
