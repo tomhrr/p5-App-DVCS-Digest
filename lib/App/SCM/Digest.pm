@@ -11,6 +11,7 @@ use DateTime;
 use DateTime::Format::Strptime;
 use Getopt::Long;
 use Email::MIME;
+use File::ReadBackwards;
 use File::Temp;
 use List::Util qw(first);
 use POSIX qw();
@@ -146,7 +147,11 @@ sub _update
             if (not -e $branch_db_path) {
                 die "Unable to find branch database ($branch_db_path).";
             }
-            my ($last) = `tail -n 1 $branch_db_path` || '';
+            my $branch_db_file =
+                File::ReadBackwards->new($branch_db_path)
+                    or die "Unable to load branch database ".
+                           "($branch_db_path).";
+            my $last = $branch_db_file->readline() || '';
             chomp $last;
             my (undef, $commit) = split /\./, $last;
             if (not $commit) {
