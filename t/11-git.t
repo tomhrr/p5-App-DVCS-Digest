@@ -9,6 +9,7 @@ plan tests => 12;
 
 use App::SCM::Digest::SCM::Git;
 use App::SCM::Digest::Utils qw(system_ad system_ad_op);
+$ENV{'APP_SCM_DIGEST_DEBUG'} = 1;
 
 use File::Temp qw(tempdir);
 
@@ -31,6 +32,9 @@ SKIP: {
     is_deeply(\@branches, [],
               'No branches found in repository');
 
+    system_ad_op("echo 'asdf' > outm");
+    system_ad("git add outm");
+    system_ad("git commit -m 'outm'");
     system_ad("git checkout -b new-branch");
     system_ad_op("echo 'asdf' > out");
     system_ad("git add out");
@@ -44,7 +48,7 @@ SKIP: {
 
     @branches = @{$git2->branches()};
     my @branch_names = map { $_->[0] } @branches;
-    is_deeply(\@branch_names, [qw(new-branch)],
+    is_deeply(\@branch_names, [qw(master new-branch)],
               'New branch found in repository');
 
     is($git2->branch_name(), 'new-branch',

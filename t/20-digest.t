@@ -9,6 +9,7 @@ plan tests => 41;
 
 use App::SCM::Digest;
 use App::SCM::Digest::Utils qw(system_ad system_ad_op);
+$ENV{'APP_SCM_DIGEST_DEBUG'} = 1;
 
 use File::Temp qw(tempdir);
 
@@ -25,6 +26,9 @@ SKIP: {
     my $repo_dir = tempdir(CLEANUP => 1);
     chdir $repo_dir;
     system_ad("git init .");
+    system_ad_op("echo 'asdf' > outm");
+    system_ad("git add outm");
+    system_ad("git commit -m 'outm'");
     system_ad("git checkout -b new-branch");
     system_ad_op("echo 'asdf' > out");
     system_ad("git add out");

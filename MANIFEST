@@ -1,0 +1,18 @@
+bin/scm-digest
+Changes
+lib/App/SCM/Digest.pm
+lib/App/SCM/Digest/SCM.pm
+lib/App/SCM/Digest/SCM/Factory.pm
+lib/App/SCM/Digest/SCM/Git.pm
+lib/App/SCM/Digest/SCM/Hg.pm
+lib/App/SCM/Digest/Utils.pm
+LICENSE
+Makefile.PL
+MANIFEST			This list of files
+README
+README.md
+t/00-load.t
+t/10-scm.t
+t/11-git.t
+t/12-hg.t
+t/20-digest.t
