@@ -220,6 +220,25 @@ sub _process_bounds
     return ($from, $to);
 }
 
+sub _utc_to_tz
+{
+    my ($self, $datetime) = @_;
+
+    my $config = $self->{'config'};
+    my $tz = $config->{'timezone'};
+    if ((not $tz) or ($tz eq 'UTC')) {
+        return $datetime;
+    }
+
+    my $strp =
+        DateTime::Format::Strptime->new(pattern   => PATTERN,
+                                        time_zone => 'UTC');
+
+    my $dt = $strp->parse_datetime($datetime);
+    $dt->set_time_zone($tz);
+    return $dt->strftime(PATTERN);
+}
+
 sub _load_commits
 {
     my ($branch_db_path, $from, $to) = @_;
@@ -283,6 +302,7 @@ sub get_email
                              "Branch:     $branch_name\n\n";
             for my $commit (@commits) {
                 my ($time, $id) = @{$commit};
+                $time = $self->_utc_to_tz($time);
                 $time =~ s/T/ /;
                 print $output_ft "Pulled at: $time\n".
                                  (join '', @{$impl->show($id)}).
