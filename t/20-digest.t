@@ -54,11 +54,11 @@ SKIP: {
     system_ad("hg branch new-branch");
     system_ad_op("echo 'qwer' > out");
     system_ad("hg add out");
-    system_ad("hg commit -m 'out'");
+    system_ad("hg commit -u out -m 'out'");
     system_ad("hg branch new-branch2/test");
     system_ad_op("echo 'qwer2' > out");
     system_ad("hg add out");
-    system_ad("hg commit -m 'out'");
+    system_ad("hg commit -u out -m 'out'");
 
     my $hg_other_remote_dir = tempdir(CLEANUP => 1);
     chdir $hg_other_remote_dir;
@@ -68,7 +68,7 @@ SKIP: {
     system_ad("hg branch new-branch4");
     system_ad_op("echo 'qwer4' > out4");
     system_ad("hg add out4");
-    system_ad("hg commit -m 'out4'");
+    system_ad("hg commit -u out4 -m 'out4'");
 
     sleep(1);
 
@@ -138,7 +138,7 @@ SKIP: {
     system_ad("hg checkout new-branch");
     system_ad_op("echo 'qwer3' > out3");
     system_ad("hg add out3");
-    system_ad("hg commit -m 'out3'");
+    system_ad("hg commit -u out3 -m 'out3'");
 
     eval {
         $digest->update();

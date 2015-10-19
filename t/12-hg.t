@@ -35,7 +35,7 @@ SKIP: {
     system_ad("hg branch new-branch");
     system_ad_op("echo 'asdf' > out");
     system_ad("hg add out");
-    system_ad("hg commit -m 'out'");
+    system_ad("hg commit -u out -m 'out'");
 
     my $repo_holder = tempdir(CLEANUP => 1);
     chdir $repo_holder;
@@ -54,7 +54,7 @@ SKIP: {
     system_ad("hg branch new-branch2");
     system_ad_op("echo 'asdf2' > out2");
     system_ad("hg add out2");
-    system_ad("hg commit -m 'out2'");
+    system_ad("hg commit -u out2 -m 'out2'");
 
     is($hg2->branch_name(), 'new-branch2',
         'Current branch name is correct (switched)');
@@ -71,7 +71,7 @@ SKIP: {
 
     system_ad_op("echo 'asdf3' > out3");
     system_ad("hg add out3");
-    system_ad("hg commit -m 'out3'");
+    system_ad("hg commit -u out3 -m 'out3'");
 
     my @commits = @{$hg2->commits_from($branches[0]->[0], $branches[0]->[1])};
     is(@commits, 1, 'Found one commit since original commit');
