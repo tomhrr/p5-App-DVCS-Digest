@@ -1,4 +1,11 @@
 Revision history for App-SCM-Digest
 
+0.02    21 October 2015
+        - Fix commit ordering problem.
+        - Remove local branches that no longer exist in the remote
+          repository.
+        - Set dummy user when ui.username is not set, in Mercurial
+          tests (Syohei Yoshida).
+
 0.01    18 October 2015
         - Initial release.
