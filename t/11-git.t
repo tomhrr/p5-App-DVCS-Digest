@@ -5,7 +5,7 @@ use strict;
 use warnings FATAL => 'all';
 use Test::More;
 
-plan tests => 12;
+plan tests => 14;
 
 use App::SCM::Digest::SCM::Git;
 use App::SCM::Digest::Utils qw(system_ad system_ad_op);
@@ -76,11 +76,22 @@ SKIP: {
     system_ad("git add out3");
     system_ad("git commit -m 'out3'");
 
-    my @commits = @{$git2->commits_from($branches[0]->[0], $branches[0]->[1])};
+    my ($branch, $id) = @{$branches[0]};
+    my @commits = @{$git2->commits_from($branch, $id)};
     is(@commits, 1, 'Found one commit since original commit');
     @branches = sort { $a->[0] cmp $b->[0] } @{$git2->branches()};
     is($commits[0], $branches[0]->[1],
         'The found commit has the correct ID');
+
+    system_ad_op("echo 'asdf4' > out4");
+    system_ad("git add out4");
+    system_ad("git commit -m 'out4'");
+
+    @commits = @{$git2->commits_from($branch, $id)};
+    is(@commits, 2, 'Found two commits since original commit');
+    @branches = sort { $a->[0] cmp $b->[0] } @{$git2->branches()};
+    is($commits[1], $branches[0]->[1],
+        'The second commit has the correct ID');
 
     my $info = join '', @{$git2->show($commits[0])};
     like($info, qr/out3/,

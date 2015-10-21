@@ -105,7 +105,9 @@ branch.
 
 Takes a branch name and a commit ID as its arguments, and returns an
 arrayref containing all commits on that branch that were received
-after the given commit.
+after the given commit.  The arrayref is in order from least to most
+recent, i.e. the last element of the arrayref contains the most recent
+commit.
 
 =item B<show>
 

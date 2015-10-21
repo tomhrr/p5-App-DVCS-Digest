@@ -125,7 +125,7 @@ sub commits_from
     my ($self, $branch, $from) = @_;
 
     $self->checkout($branch);
-    my @new_commits = map { chomp; $_ } `git rev-list $from..HEAD`;
+    my @new_commits = reverse map { chomp; $_ } `git rev-list $from..HEAD`;
 
     return \@new_commits;
 }
