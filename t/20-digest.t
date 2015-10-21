@@ -133,6 +133,7 @@ SKIP: {
     system_ad_op("echo 'asdf3' > out3");
     system_ad("git add out3");
     system_ad("git commit -m 'out3'");
+    system_ad("git branch -D new-branch2/test");
 
     chdir $hg_repo_dir;
     system_ad("hg checkout new-branch");
@@ -235,7 +236,7 @@ SKIP: {
     like($email_content, qr/qwer\s*$/m,
         'Email contains initialisation content (hg)');
 
-    open my $fh, '>', $db_path."/test/new-branch2/test" or die $!;
+    open my $fh, '>', $db_path."/test/new-branch4" or die $!;
     print $fh "";
     close $fh;
 

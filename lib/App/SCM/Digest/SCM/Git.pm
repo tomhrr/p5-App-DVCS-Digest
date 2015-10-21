@@ -39,9 +39,34 @@ sub open_repository
     return 1;
 }
 
+sub prune
+{
+    my ($self) = @_;
+
+    my $current_branch = $self->branch_name();
+    $self->checkout('master');
+    my @lines = `git remote prune origin`;
+    for my $line (@lines) {
+        chomp $line;
+        if (my ($branch) = ($line =~ /^ \* \[pruned\] origin\/(.*)$/)) {
+            system_ad("git branch -D $branch");
+            if ($branch eq ($current_branch || '')) {
+                $current_branch = undef;
+            }
+        }
+    }
+    if ($current_branch) {
+        $self->checkout($current_branch);
+    }
+
+    return 1;
+}
+
 sub pull
 {
     my ($self) = @_;
+
+    $self->prune();
 
     system_ad("git pull");
 
