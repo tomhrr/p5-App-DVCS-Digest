@@ -1,5 +1,10 @@
 Revision history for App-SCM-Digest
 
+0.03    22 October 2015
+        - Do not assume that the 'master' branch exists for Git
+          repositories, when removing local branches that no longer
+          have corresponding remote branches.
+
 0.02    21 October 2015
         - Fix commit ordering problem.
         - Remove local branches that no longer exist in the remote
