@@ -6,6 +6,7 @@ use warnings;
 use App::SCM::Digest::Utils qw(system_ad);
 
 use autodie;
+use List::Util qw(first);
 
 sub new
 {
@@ -43,20 +44,29 @@ sub prune
 {
     my ($self) = @_;
 
-    my $current_branch = $self->branch_name();
-    $self->checkout('master');
+    my $original_branch = $self->branch_name() || '';
+    my $current_branch = $original_branch;
+
     my @lines = `git remote prune origin`;
     for my $line (@lines) {
         chomp $line;
         if (my ($branch) = ($line =~ /^ \* \[pruned\] origin\/(.*)$/)) {
+            if ($branch eq $current_branch) {
+                my @branches = @{$self->branches()};
+                my $other_branch =
+                    first { $_->[0] ne $current_branch }
+                        @branches;
+                $self->checkout($other_branch->[0]);
+                $current_branch = $other_branch->[0];
+            }
             system_ad("git branch -D $branch");
-            if ($branch eq ($current_branch || '')) {
-                $current_branch = undef;
+            if ($branch eq $original_branch) {
+                $original_branch = undef;
             }
         }
     }
-    if ($current_branch) {
-        $self->checkout($current_branch);
+    if ($original_branch) {
+        $self->checkout($original_branch);
     }
 
     return 1;
