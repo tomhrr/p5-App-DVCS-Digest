@@ -3,7 +3,7 @@ package App::SCM::Digest;
 use strict;
 use warnings;
 
-use App::SCM::Digest::Utils qw(system_ad);
+use App::SCM::Digest::Utils qw(system_ad slurp);
 use App::SCM::Digest::SCM::Factory;
 
 use autodie;
@@ -24,7 +24,7 @@ use constant EMAIL_ATTRIBUTES => (
     encoding     => 'quoted-printable',
 );
 
-our $VERSION = '0.03';
+our $VERSION = '0.04';
 
 sub new
 {
@@ -32,18 +32,6 @@ sub new
     my $self = { config => $config };
     bless $self, $class;
     return $self;
-}
-
-sub _slurp
-{
-    my ($path) = @_;
-
-    open my $fh, '<', $path;
-    my @lines;
-    while (my $line = <$fh>) {
-        push @lines, $line;
-    }
-    return join '', @lines;
 }
 
 sub _strftime
@@ -267,7 +255,7 @@ sub _make_email_mime
         Email::MIME->create(
             attributes => { EMAIL_ATTRIBUTES,
                             filename => $filename },
-            body_str   => _slurp($ft)
+            body_str   => slurp($ft)
         );
 }
 

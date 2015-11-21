@@ -9,7 +9,6 @@ plan tests => 41;
 
 use App::SCM::Digest;
 use App::SCM::Digest::Utils qw(system_ad system_ad_op);
-$ENV{'APP_SCM_DIGEST_DEBUG'} = 1;
 
 use File::Temp qw(tempdir);
 

@@ -3,16 +3,36 @@ package App::SCM::Digest::Utils;
 use strict;
 use warnings;
 
+use File::Temp;
+
 use base qw(Exporter);
-our @EXPORT_OK = qw(system_ad system_ad_op);
+our @EXPORT_OK = qw(system_ad system_ad_op slurp);
+
+sub slurp
+{
+    my ($path) = @_;
+
+    open my $fh, '<', $path;
+    my @lines;
+    while (my $line = <$fh>) {
+        push @lines, $line;
+    }
+    return join '', @lines;
+}
 
 sub _system_ad
 {
-    my ($cmd) = @_;
+    my ($cmd, $ft) = @_;
 
     my $res = system("$cmd");
     if ($res != 0) {
-        die "Command ($cmd) failed: $res";
+        my $extra = '';
+        if ($ft) {
+            my $content = slurp($ft->filename());
+            chomp $content;
+            $extra = " ($content)";
+        }
+        die "Command ($cmd) failed: $res$extra";
     }
 
     return 1;
@@ -22,12 +42,10 @@ sub system_ad
 {
     my ($cmd) = @_;
 
-    my $redirect =
-        ($ENV{'APP_SCM_DIGEST_DEBUG'}
-            ? ''
-            : '>/dev/null');
+    my $ft = File::Temp->new();
+    my $redirect = '>'.$ft->filename();
 
-    return _system_ad("$cmd $redirect 2>&1");
+    return _system_ad("$cmd $redirect 2>&1", $ft);
 }
 
 sub system_ad_op

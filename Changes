@@ -1,5 +1,9 @@
 Revision history for App-SCM-Digest
 
+0.04    21 November 2015
+        - Fix debug output problem, and print output whenever a
+          problem occurs.
+
 0.03    22 October 2015
         - Do not assume that the 'master' branch exists for Git
           repositories, when removing local branches that no longer
