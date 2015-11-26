@@ -24,7 +24,7 @@ SKIP: {
 
     my $repo_dir = tempdir(CLEANUP => 1);
     chdir $repo_dir;
-    system_ad("git init .");
+    system_ad("git init-db .");
     system_ad_op("echo 'asdf' > outm");
     system_ad("git add outm");
     system_ad("git commit -m 'outm'");

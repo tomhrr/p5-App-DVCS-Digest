@@ -15,7 +15,7 @@ use File::Temp qw(tempdir);
 SKIP: {
     my $git = eval { App::SCM::Digest::SCM::Git->new(); };
     if ($@) {
-        skip 'Git not available', 12;
+        skip 'Git not available', 14;
     }
 
     eval { $git->clone('invalid', 'invalid') };
@@ -24,7 +24,7 @@ SKIP: {
 
     my $repo_dir = tempdir(CLEANUP => 1);
     chdir $repo_dir;
-    system_ad("git init .");
+    system_ad("git init-db .");
 
     $git->open_repository($repo_dir);
     my @branches = @{$git->branches()};
