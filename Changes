@@ -1,5 +1,10 @@
 Revision history for App-SCM-Digest
 
+0.05    26 November 2015
+        - Fix wrong test skip count.
+        - Use 'init-db' instead of 'init' for Git tests, so that they
+          work when using older versions of Git.
+
 0.04    21 November 2015
         - Fix debug output problem, and print output whenever a
           problem occurs.
