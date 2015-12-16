@@ -24,7 +24,7 @@ use constant EMAIL_ATTRIBUTES => (
     encoding     => 'quoted-printable',
 );
 
-our $VERSION = '0.05';
+our $VERSION = '0.06';
 
 sub new
 {

@@ -17,6 +17,7 @@ sub slurp
     while (my $line = <$fh>) {
         push @lines, $line;
     }
+    close $fh;
     return join '', @lines;
 }
 

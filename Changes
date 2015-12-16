@@ -1,5 +1,8 @@
 Revision history for App-SCM-Digest
 
+0.06    16 December 2016
+        - Fix file handle leak.
+
 0.05    26 November 2015
         - Fix wrong test skip count.
         - Use 'init-db' instead of 'init' for Git tests, so that they
