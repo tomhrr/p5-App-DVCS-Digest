@@ -379,6 +379,7 @@ The configuration hashref is like so:
     db_path         => "/path/to/db",
     repository_path => "/path/to/local/repositories",
     timezone        => "local",
+    ignore_errors   => 0,
     headers => {
         from => "From Address <from@example.org>",
         to   => "To Address <to@example.org>",
@@ -400,11 +401,14 @@ C<db_path>, which must be a directory.
 The local copies of the repositories are stored in C<repository_path>,
 which must also be a directory.
 
-C<repository_path>
-
 The C<timezone> entry is optional, and defaults to 'UTC'.  It must be
 a valid constructor value for L<DateTime::TimeZone>.  See
 L<DateTime::TimeZone::Catalog> for a list of valid options.
+
+C<ignore_errors> is an optional boolean, and defaults to false.  If
+false, errors will cause methods to die immediately.  If true, errors
+will instead be printed to C<stderr>, and the method will continue
+onto the next repository.
 
 L<App::SCM::Digest> clones local copies of the repositories into the
 C<repository_path> directory.  These local copies should not be used

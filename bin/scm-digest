@@ -75,6 +75,7 @@ specified are as follows:
   db_path:          /path/to/db
   repository_path:  /path/to/local/repositories
   timezone:         UTC
+  ignore_errors:    0
   headers:
     From: From Address <from@example.org>
     To:   To Address <to@example.org>
@@ -93,5 +94,10 @@ options.
 
 C<timezone> is optional, and defaults to 'UTC'.  See
 L<DateTime::TimeZone::Catalog> for a list of valid timezones.
+
+C<ignore_errors> is an optional boolean, and defaults to false.  If
+false, errors will cause the process to abort immediately.  If true,
+errors will instead be printed to C<stderr>, and the process will
+continue onto the next repository.
 
 =cut

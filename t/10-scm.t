@@ -5,13 +5,14 @@ use strict;
 use warnings FATAL => 'all';
 use Test::More;
 
-plan tests => 18;
+plan tests => 20;
 
 use App::SCM::Digest::SCM;
 
 {
     my @methods = qw(clone
                      open_repository
+                     is_usable
                      pull
                      branches
                      branch
