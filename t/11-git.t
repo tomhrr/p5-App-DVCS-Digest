@@ -24,7 +24,7 @@ SKIP: {
 
     my $repo_dir = tempdir(CLEANUP => 1);
     chdir $repo_dir;
-    system_ad("git init-db .");
+    system_ad("git init-db");
 
     $git->open_repository($repo_dir);
     my @branches = @{$git->branches()};
