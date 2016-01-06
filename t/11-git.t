@@ -18,7 +18,7 @@ SKIP: {
         skip 'Git not available', 14;
     }
 
-    eval { $git->clone('invalid', 'invalid') };
+    eval { $git->clone('invalid url', 'invalid') };
     ok($@, 'Died trying to clone invalid URL');
     like($@, qr/Command.*failed/, 'Got expected error message');
 
