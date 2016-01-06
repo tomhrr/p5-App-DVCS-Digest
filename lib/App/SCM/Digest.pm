@@ -71,55 +71,91 @@ sub _load_and_open_repository
     return ($name, $impl);
 }
 
-sub _init
+sub _init_repository
 {
-    my ($self) = @_;
+    my ($repo_path, $db_path, $repository) = @_;
 
-    my $config = $self->{'config'};
-
-    my ($repo_path, $db_path, $repositories) =
-        @{$config}{qw(repository_path db_path repositories)};
-
-    for my $repository (@{$repositories}) {
-        chdir $repo_path;
-        my ($name, $impl) = _load_repository($repository);
-        my $pre_existing = (-e $name);
-        if (not $pre_existing) {
+    chdir $repo_path;
+    my ($name, $impl) = _load_repository($repository);
+    my $pre_existing = (-e $name);
+    if (not $pre_existing) {
+        if (not -e "$db_path/$name") {
             mkdir "$db_path/$name";
-            $impl->clone($repository->{'url'}, $name);
         }
-        $impl->open_repository($name);
-        if (not $impl->is_usable()) {
+        $impl->clone($repository->{'url'}, $name);
+    }
+    $impl->open_repository($name);
+    if (not $impl->is_usable()) {
+        return;
+    }
+    if ($pre_existing) {
+        $impl->pull();
+    }
+    my @branches = @{$impl->branches()};
+    for my $branch (@branches) {
+        my ($branch_name, $commit) = @{$branch};
+        my $branch_db_path = "$db_path/$name/$branch_name";
+        if (-e $branch_db_path) {
             next;
         }
-        if ($pre_existing) {
-            $impl->pull();
+        my @branch_db_segments = split /\//, $branch_db_path;
+        pop @branch_db_segments;
+        my $branch_db_parent = join '/', @branch_db_segments;
+        if (not -e $branch_db_parent) {
+            system_ad("mkdir -p $branch_db_parent");
         }
-        my @branches = @{$impl->branches()};
-        for my $branch (@branches) {
-            my ($branch_name, $commit) = @{$branch};
-            my $branch_db_path = "$db_path/$name/$branch_name";
-            if (-e $branch_db_path) {
-                next;
-            }
-            my @branch_db_segments = split /\//, $branch_db_path;
-            pop @branch_db_segments;
-            my $branch_db_parent = join '/', @branch_db_segments;
-            if (not -e $branch_db_parent) {
-                system_ad("mkdir -p $branch_db_parent");
-            }
-            open my $fh, '>', $branch_db_path;
-            print $fh _strftime(time()).".$commit\n";
-            close $fh;
-        }
+        open my $fh, '>', $branch_db_path;
+        print $fh _strftime(time()).".$commit\n";
+        close $fh;
     }
 
     return 1;
 }
 
-sub _update
+sub _update_repository
 {
-    my ($self) = @_;
+    my ($repo_path, $db_path, $repository) = @_;
+
+    chdir $repo_path;
+    my ($name, $impl) = _load_and_open_repository($repository);
+    if (not $impl->is_usable()) {
+        return;
+    }
+    $impl->pull();
+    my $current_branch = $impl->branch_name();
+    my @branches = @{$impl->branches()};
+    for my $branch (@branches) {
+        my ($branch_name, undef) = @{$branch};
+        my $branch_db_path = "$db_path/$name/$branch_name";
+        if (not -e $branch_db_path) {
+            die "Unable to find branch database ($branch_db_path).";
+        }
+        my $branch_db_file =
+            File::ReadBackwards->new($branch_db_path)
+                or die "Unable to load branch database ".
+                        "($branch_db_path).";
+        my $last = $branch_db_file->readline() || '';
+        chomp $last;
+        my (undef, $commit) = split /\./, $last;
+        if (not $commit) {
+            die "Unable to find commit ID in database.";
+        }
+        my @new_commits = @{$impl->commits_from($branch_name, $commit)};
+        my $time = _strftime(time());
+        open my $fh, '>>', $branch_db_path;
+        for my $new_commit (@new_commits) {
+            print $fh "$time.$new_commit\n";
+        }
+        close $fh;
+    }
+    $impl->checkout($current_branch);
+
+    return 1;
+}
+
+sub _repository_map
+{
+    my ($self, $method) = @_;
 
     my $config = $self->{'config'};
 
@@ -127,39 +163,16 @@ sub _update
         @{$config}{qw(repository_path db_path repositories)};
 
     for my $repository (@{$repositories}) {
-        chdir $repo_path;
-        my ($name, $impl) = _load_and_open_repository($repository);
-        if (not $impl->is_usable()) {
-            next;
+        if ($config->{'ignore_errors'}) {
+            eval {
+                $method->($repo_path, $db_path, $repository);
+            };
+            if (my $error = $@) {
+                warn $error;
+            }
+        } else {
+            $method->($repo_path, $db_path, $repository);
         }
-        $impl->pull();
-        my $current_branch = $impl->branch_name();
-        my @branches = @{$impl->branches()};
-        for my $branch (@branches) {
-            my ($branch_name, undef) = @{$branch};
-            my $branch_db_path = "$db_path/$name/$branch_name";
-            if (not -e $branch_db_path) {
-                die "Unable to find branch database ($branch_db_path).";
-            }
-            my $branch_db_file =
-                File::ReadBackwards->new($branch_db_path)
-                    or die "Unable to load branch database ".
-                           "($branch_db_path).";
-            my $last = $branch_db_file->readline() || '';
-            chomp $last;
-            my (undef, $commit) = split /\./, $last;
-            if (not $commit) {
-                die "Unable to find commit ID in database.";
-            }
-            my @new_commits = @{$impl->commits_from($branch_name, $commit)};
-            my $time = _strftime(time());
-            open my $fh, '>>', $branch_db_path;
-            for my $new_commit (@new_commits) {
-                print $fh "$time.$new_commit\n";
-            }
-            close $fh;
-        }
-        $impl->checkout($current_branch);
     }
 }
 
@@ -167,8 +180,8 @@ sub update
 {
     my ($self) = @_;
 
-    $self->_init();
-    $self->_update();
+    $self->_repository_map(\&_init_repository);
+    $self->_repository_map(\&_update_repository);
 
     return 1;
 }

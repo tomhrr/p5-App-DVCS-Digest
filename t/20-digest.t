@@ -100,7 +100,7 @@ SKIP: {
     like($@, qr/Unable to open repository 'test'/,
         'Got correct error message');
 
-    eval { $digest->_update() };
+    eval { $digest->_repository_map(\&App::SCM::Digest::_update_repository) };
     ok($@, 'Died trying to update pre-initialisation');
     like($@, qr/Unable to open repository 'test'/,
         'Got correct error message');

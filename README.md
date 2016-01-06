@@ -56,6 +56,7 @@ specified are as follows:
   db_path:          /path/to/db
   repository_path:  /path/to/local/repositories
   timezone:         UTC
+  ignore_errors:    0
   headers:
     From: From Address <from@example.org>
     To:   To Address <to@example.org>
@@ -75,6 +76,11 @@ configuration entries.  Paths must be absolute.
 
 `timezone` is optional, and defaults to 'UTC'.  See
 `DateTime::TimeZone::Catalog` for a list of valid timezones.
+
+`ignore_errors` is an optional boolean, and defaults to false.  If
+false, errors will cause the process to abort immediately.  If true,
+errors will instead be printed to `stderr`, and the process will
+continue onto the next repository.
 
 ### Example
 
