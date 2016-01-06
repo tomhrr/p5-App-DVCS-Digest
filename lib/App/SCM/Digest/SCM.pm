@@ -3,6 +3,11 @@ package App::SCM::Digest::SCM;
 use strict;
 use warnings;
 
+sub is_usable
+{
+    die "Not implemented.";
+}
+
 sub clone
 {
     die "Not implemented.";
@@ -82,6 +87,13 @@ Takes a repository path as its single argument.  "Opens" the
 repository, typically by way of C<chdir>.  Once a repository is
 opened, subsequent method calls will operate on that repository, until
 C<open> is called again or C<chdir> is executed in some other context.
+
+=item B<is_usable>
+
+Returns a boolean indicating whether other operations may be performed
+on this repository.  Should be called immediately after calling
+C<open_repository>, and prior to calling any other repository-specific
+method.
 
 =item B<pull>
 

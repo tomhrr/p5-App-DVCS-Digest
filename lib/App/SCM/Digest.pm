@@ -89,6 +89,9 @@ sub _init
             $impl->clone($repository->{'url'}, $name);
         }
         $impl->open_repository($name);
+        if (not $impl->is_usable()) {
+            next;
+        }
         if ($pre_existing) {
             $impl->pull();
         }
@@ -126,6 +129,9 @@ sub _update
     for my $repository (@{$repositories}) {
         chdir $repo_path;
         my ($name, $impl) = _load_and_open_repository($repository);
+        if (not $impl->is_usable()) {
+            next;
+        }
         $impl->pull();
         my $current_branch = $impl->branch_name();
         my @branches = @{$impl->branches()};
@@ -276,6 +282,9 @@ sub get_email
     for my $repository (@{$repositories}) {
         chdir $repo_path;
         my ($name, $impl) = _load_and_open_repository($repository);
+        if (not $impl->is_usable()) {
+            next;
+        }
         my $current_branch = $impl->branch_name();
 
         my @branches = @{$impl->branches()};

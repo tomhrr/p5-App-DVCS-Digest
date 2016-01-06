@@ -40,6 +40,14 @@ sub open_repository
     return 1;
 }
 
+sub is_usable
+{
+    my ($self) = @_;
+
+    my @branches = `git branch -l`;
+    return (@branches ? 1 : 0);
+}
+
 sub prune
 {
     my ($self) = @_;

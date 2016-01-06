@@ -39,6 +39,11 @@ sub open_repository
     return 1;
 }
 
+sub is_usable
+{
+    return 1;
+}
+
 sub pull
 {
     my ($self) = @_;
