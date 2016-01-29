@@ -18,3 +18,4 @@ t/12-hg.t
 t/20-digest.t
 t/21-is-usable.t
 t/22-ignore-errors.t
+t/lib/TestFunctions.pm
