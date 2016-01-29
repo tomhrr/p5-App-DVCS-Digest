@@ -1,5 +1,9 @@
 Revision history for App-SCM-Digest
 
+0.09    30 January 2016
+        - Set user.name and user.email for Git repositories created in
+          tests.
+
 0.08    7 January 2016
         - Fix wrong test skip count.
 
