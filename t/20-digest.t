@@ -12,6 +12,9 @@ use App::SCM::Digest::Utils qw(system_ad system_ad_op);
 
 use File::Temp qw(tempdir);
 
+use lib './t/lib';
+use TestFunctions qw(initialise_git_repository);
+
 SKIP: {
     eval { App::SCM::Digest::SCM::Git->new(); };
     if ($@) {
@@ -24,7 +27,7 @@ SKIP: {
 
     my $repo_dir = tempdir(CLEANUP => 1);
     chdir $repo_dir;
-    system_ad("git init-db");
+    initialise_git_repository();
     system_ad_op("echo 'asdf' > outm");
     system_ad("git add outm");
     system_ad("git commit -m 'outm'");

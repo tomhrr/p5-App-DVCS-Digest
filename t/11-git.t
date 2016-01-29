@@ -12,6 +12,9 @@ use App::SCM::Digest::Utils qw(system_ad system_ad_op);
 
 use File::Temp qw(tempdir);
 
+use lib './t/lib';
+use TestFunctions qw(initialise_git_repository);
+
 SKIP: {
     my $git = eval { App::SCM::Digest::SCM::Git->new(); };
     if ($@) {
@@ -24,7 +27,7 @@ SKIP: {
 
     my $repo_dir = tempdir(CLEANUP => 1);
     chdir $repo_dir;
-    system_ad("git init-db");
+    initialise_git_repository();
 
     $git->open_repository($repo_dir);
     my @branches = @{$git->branches()};
