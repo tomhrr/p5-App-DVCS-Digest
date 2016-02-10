@@ -5,7 +5,7 @@ use strict;
 use warnings FATAL => 'all';
 use Test::More;
 
-plan tests => 4;
+plan tests => 7;
 
 use App::SCM::Digest;
 use App::SCM::Digest::Utils qw(system_ad system_ad_op);
@@ -53,6 +53,20 @@ SKIP: {
 
     my @lines = $c->read();
     ok(@lines, 'Invalid repository caused standard error output');
+
+    $config{'ignore_errors'} = 0;
+    eval { $digest->get_email(); };
+    ok($@, 'Invalid repository causes failure, by default (get_email)');
+
+    $config{'ignore_errors'} = 1;
+    $c->start();
+    eval { $digest->get_email(); };
+    $c->stop();
+    ok((not $@), 'Invalid repository is ignored (get_email)');
+    diag $@ if $@;
+
+    @lines = $c->read();
+    ok(@lines, 'Invalid repository caused standard error output (get_email)');
 
     chdir('/tmp');
 }

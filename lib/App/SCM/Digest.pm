@@ -282,21 +282,17 @@ sub get_email
 {
     my ($self, $from, $to) = @_;
 
-    my $config = $self->{'config'};
-
-    my ($repo_path, $db_path, $repositories) =
-        @{$config}{qw(repository_path db_path repositories)};
-
     ($from, $to) = $self->_process_bounds($from, $to);
 
     my $output_ft = File::Temp->new();
     my @commit_data;
 
-    for my $repository (@{$repositories}) {
+    $self->_repository_map(sub {
+        my ($repo_path, $db_path, $repository) = @_;
         chdir $repo_path;
         my ($name, $impl) = _load_and_open_repository($repository);
         if (not $impl->is_usable()) {
-            next;
+            return;
         }
         my $current_branch = $impl->branch_name();
 
@@ -327,7 +323,7 @@ sub get_email
             print $output_ft "\n";
         }
         $impl->checkout($current_branch);
-    }
+    });
 
     $output_ft->flush();
 
@@ -335,6 +331,7 @@ sub get_email
         return;
     }
 
+    my $config = $self->{'config'};
     my $email = Email::MIME->create(
         header_str => [ %{$config->{'headers'} || {}} ],
         parts => [
