@@ -262,6 +262,7 @@ sub _load_commits
             push @commits, [ $time, $id ];
         }
     }
+    close $fh;
 
     return @commits;
 }
