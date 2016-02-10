@@ -269,13 +269,13 @@ sub _load_commits
 
 sub _make_email_mime
 {
-    my ($ft, $filename) = @_;
+    my ($content, $filename) = @_;
 
     return
         Email::MIME->create(
             attributes => { EMAIL_ATTRIBUTES,
                             filename => $filename },
-            body_str   => slurp($ft)
+            body_str   => $content
         );
 }
 
@@ -315,11 +315,8 @@ sub get_email
                                  (join '', @{$impl->show($id)}).
                                  "\n";
 
-                my $att_ft = File::Temp->new();
-                print $att_ft @{$impl->show_all($id)};
-                $att_ft->flush();
-
-                push @commit_data, [$name, $branch_name, $id, $att_ft];
+                my $content = join '', @{$impl->show_all($id)};
+                push @commit_data, [$name, $branch_name, $id, $content];
             }
             print $output_ft "\n";
         }
@@ -336,10 +333,10 @@ sub get_email
     my $email = Email::MIME->create(
         header_str => [ %{$config->{'headers'} || {}} ],
         parts => [
-            _make_email_mime($output_ft, 'log.txt'),
+            _make_email_mime(slurp($output_ft), 'log.txt'),
             map {
-                my ($name, $branch_name, $id, $att_ft) = @{$_};
-                _make_email_mime($att_ft,
+                my ($name, $branch_name, $id, $content) = @{$_};
+                _make_email_mime($content,
                                  "$name-$branch_name-$id.diff"),
             } @commit_data
         ]
