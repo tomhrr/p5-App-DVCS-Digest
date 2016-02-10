@@ -1,5 +1,9 @@
 Revision history for App-SCM-Digest
 
+0.10    10 Februry 2016
+        - Take account of 'ignore_errors' in get_email.
+        - Fix file-handling problems.
+
 0.09    30 January 2016
         - Set user.name and user.email for Git repositories created in
           tests.

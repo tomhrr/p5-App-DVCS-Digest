@@ -24,7 +24,7 @@ use constant EMAIL_ATTRIBUTES => (
     encoding     => 'quoted-printable',
 );
 
-our $VERSION = '0.09';
+our $VERSION = '0.10';
 
 sub new
 {
@@ -357,7 +357,7 @@ App::SCM::Digest
 
     my $digest = App::SCM::Digest->new($config);
     $digest->update();
-    $digest->send();
+    $digest->get_email();
 
 =head1 DESCRIPTION
 
