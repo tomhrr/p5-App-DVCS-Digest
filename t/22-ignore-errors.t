@@ -16,7 +16,7 @@ use IO::Capture::Stderr;
 SKIP: {
     eval { App::SCM::Digest::SCM::Git->new(); };
     if ($@) {
-        skip 'Git not available', 4;
+        skip 'Git not available', 7;
     }
 
     my $db_path   = tempdir(CLEANUP => 1);
