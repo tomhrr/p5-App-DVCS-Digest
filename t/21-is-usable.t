@@ -23,7 +23,10 @@ SKIP: {
 
     my $repo_dir = tempdir(CLEANUP => 1);
     chdir $repo_dir;
-    initialise_git_repository();
+    eval { initialise_git_repository() };
+    if (my $error = $@) {
+        skip 'Git not available', 2;
+    }
 
     my $db_path   = tempdir(CLEANUP => 1);
     my $repo_path = tempdir(CLEANUP => 1);
