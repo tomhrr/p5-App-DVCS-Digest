@@ -13,7 +13,7 @@ use App::SCM::Digest::Utils qw(system_ad system_ad_op);
 use File::Temp qw(tempdir);
 
 use lib './t/lib';
-use TestFunctions qw(initialise_git_repository);
+use TestFunctions qw(initialise_git_repository initialise_git_clone);
 
 SKIP: {
     my $git = eval { App::SCM::Digest::SCM::Git->new(); };
@@ -47,6 +47,7 @@ SKIP: {
     my $git2 = App::SCM::Digest::SCM::Git->new();
     $git2->clone("file://".$repo_dir, "repo");
     $git2->open_repository("repo");
+    initialise_git_clone();
 
     @branches = @{$git2->branches()};
     my @branch_names = map { $_->[0] } @branches;
