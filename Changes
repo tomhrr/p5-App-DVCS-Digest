@@ -1,5 +1,11 @@
 Revision history for App-SCM-Digest
 
+0.11    13 February 2016
+        - Catch 'init-db' errors in tests.
+        - Set user.name and user.email for Git repository clones in
+          tests.
+        - Fix wrong skip test count.
+
 0.10    10 Februry 2016
         - Take account of 'ignore_errors' in get_email.
         - Fix file-handling problems.
