@@ -11,6 +11,7 @@ use DateTime;
 use DateTime::Format::Strptime;
 use Getopt::Long;
 use Email::MIME;
+use File::Path;
 use File::ReadBackwards;
 use File::Temp;
 use List::Util qw(first);
@@ -163,15 +164,33 @@ sub _repository_map
         @{$config}{qw(repository_path db_path repositories)};
 
     for my $repository (@{$repositories}) {
-        if ($config->{'ignore_errors'}) {
+        eval {
+            $method->($repo_path, $db_path, $repository);
+        };
+        if (my $error = $@) {
+            chdir $repo_path;
+            my ($name, $impl) = _load_repository($repository);
+            my $rm_error;
+            rmtree($name, { error => $rm_error });
+            if ($rm_error and @{$rm_error}) {
+                my $info = join ', ', map { join ':', %{$_} } @{$rm_error};
+                die "Unable to remove repository for re-clone: ".$info;
+            }
             eval {
+                $impl->clone($repository->{'url'}, $name);
                 $method->($repo_path, $db_path, $repository);
             };
-            if (my $error = $@) {
-                warn $error;
+            if (my $sub_error = $@) {
+                my $error_msg = "Re-clone or nested operation failed: ".
+                                "$sub_error (original error was $error)";
+                if ($config->{'ignore_errors'}) {
+                    warn $error_msg;
+                } else {
+                    die $error_msg;
+                }
+            } else {
+                warn "Re-cloned '$name' due to error: $error";
             }
-        } else {
-            $method->($repo_path, $db_path, $repository);
         }
     }
 }
