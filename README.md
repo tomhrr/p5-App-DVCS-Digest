@@ -82,6 +82,10 @@ false, errors will cause the process to abort immediately.  If true,
 errors will instead be printed to `stderr`, and the process will
 continue onto the next repository.
 
+Depending on what has happened to the remote repository, the updating
+of the local repository may involve a merge.  That merge will prefer
+the content from the remote repository, in the event of a conflict.
+
 ### Example
 
 ```
@@ -102,7 +106,7 @@ user@host:tmp$ scm-digest --conf /tmp/config.yml --get-email | sendmail user@hos
 
 ### Copyright and licence
 
-Copyright (C) 2015 Tom Harrison
+Copyright (C) 2015-2017 Tom Harrison
 
 This library is free software; you can redistribute it and/or modify
 it under the same terms as Perl itself, either Perl version 5.8.8 or,
