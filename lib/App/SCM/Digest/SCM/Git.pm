@@ -148,6 +148,15 @@ sub commits_from
     return \@new_commits;
 }
 
+sub has
+{
+    my ($self, $id) = @_;
+
+    my $res = system("git show -s $id >/dev/null 2>&1");
+
+    return ($res == 0);
+}
+
 sub show
 {
     my ($self, $id) = @_;

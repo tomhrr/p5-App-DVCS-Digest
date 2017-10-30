@@ -135,12 +135,17 @@ sub _update_repository
             File::ReadBackwards->new($branch_db_path)
                 or die "Unable to load branch database ".
                         "($branch_db_path).";
-        my $last = $branch_db_file->readline() || '';
-        chomp $last;
-        my (undef, $commit) = split /\./, $last;
-        if (not $commit) {
-            die "Unable to find commit ID in database.";
-        }
+
+        my ($last, $commit);
+        do {
+            $last = $branch_db_file->readline() || '';
+            chomp $last;
+            (undef, $commit) = split /\./, $last;
+            if (not $commit) {
+                die "Unable to find commit ID in database.";
+            }
+        } while (not $impl->has($commit));
+
         my @new_commits = @{$impl->commits_from($branch_name, $commit)};
         my $time = _strftime(time());
         open my $fh, '>>', $branch_db_path;
@@ -330,12 +335,18 @@ sub get_email
                 my ($time, $id) = @{$commit};
                 $time = $self->_utc_to_tz($time);
                 $time =~ s/T/ /;
-                print $output_ft "Pulled at: $time\n".
-                                 (join '', @{$impl->show($id)}).
-                                 "\n";
+                if ($impl->has($id)) {
+                    print $output_ft "Pulled at: $time\n".
+                                     (join '', @{$impl->show($id)}).
+                                     "\n";
 
-                my $content = join '', @{$impl->show_all($id)};
-                push @commit_data, [$name, $branch_name, $id, $content];
+                    my $content = join '', @{$impl->show_all($id)};
+                    push @commit_data, [$name, $branch_name, $id, $content];
+                } else {
+                    print $output_ft "Pulled at: $time\n".
+                                     "commit $id\n".
+                                     "(no longer present in repository)\n\n";
+                }
             }
             print $output_ft "\n";
         }

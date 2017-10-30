@@ -5,7 +5,7 @@ use strict;
 use warnings FATAL => 'all';
 use Test::More;
 
-plan tests => 14;
+plan tests => 16;
 
 use App::SCM::Digest::SCM::Git;
 use App::SCM::Digest::Utils qw(system_ad system_ad_op);
@@ -98,6 +98,9 @@ SKIP: {
     @branches = sort { $a->[0] cmp $b->[0] } @{$git2->branches()};
     is($commits[1], $branches[0]->[1],
         'The second commit has the correct ID');
+
+    ok($git2->has($commits[0]), 'Has a commit');
+    ok((not $git2->has('invalid')), 'Does not have a commit');
 
     my $info = join '', @{$git2->show($commits[0])};
     like($info, qr/out3/,
