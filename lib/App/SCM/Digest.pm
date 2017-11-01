@@ -11,9 +11,10 @@ use DateTime;
 use DateTime::Format::Strptime;
 use Getopt::Long;
 use Email::MIME;
+use File::Copy;
 use File::Path;
 use File::ReadBackwards;
-use File::Temp;
+use File::Temp qw(tempdir);
 use List::Util qw(first);
 use POSIX qw();
 
@@ -175,17 +176,37 @@ sub _repository_map
         if (my $error = $@) {
             chdir $repo_path;
             my ($name, $impl) = _load_repository($repository);
-            my $rm_error;
-            rmtree($name, { error => $rm_error });
-            if ($rm_error and @{$rm_error}) {
-                my $info = join ', ', map { join ':', %{$_} } @{$rm_error};
-                die "Unable to remove repository for re-clone: ".$info;
+            my $backup_dir = tempdir(CLEANUP => 1);
+            my $backup_path = $backup_dir.'/temporary';
+            my $do_backup = (-e $name);
+            if ($do_backup) {
+                my $res = move($name, $backup_path);
+                if (not $res) {
+                    warn "Unable to backup repository for re-clone: $!";
+                }
             }
             eval {
                 $impl->clone($repository->{'url'}, $name);
                 $method->($repo_path, $db_path, $repository);
             };
             if (my $sub_error = $@) {
+                if ($do_backup) {
+                    my $rm_error;
+                    rmtree($name, { error => \$rm_error });
+                    if ($rm_error and @{$rm_error}) {
+                        my $info =
+                            join ', ',
+                            map { join ':', %{$_} }
+                                @{$rm_error};
+                        warn "Unable to restore repository: ".$info;
+                    } else {
+                        my $res = move($backup_path, $name);
+                        if (not $res) {
+                            warn "Unable to restore repository on ".
+                                 "failed rerun: $!";
+                        }
+                    }
+                }
                 my $error_msg = "Re-clone or nested operation failed: ".
                                 "$sub_error (original error was $error)";
                 if ($config->{'ignore_errors'}) {
