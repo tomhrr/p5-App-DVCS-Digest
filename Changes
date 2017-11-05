@@ -1,5 +1,8 @@
 Revision history for App-SCM-Digest
 
+0.13    5 November 2017
+        - Fix wrong skip test counts.
+
 0.12    2 November 2017
         - Re-clone the repository if an attempted operation fails,
           and restore the original repository if the re-clone or
