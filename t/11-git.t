@@ -18,7 +18,7 @@ use TestFunctions qw(initialise_git_repository initialise_git_clone);
 SKIP: {
     my $git = eval { App::SCM::Digest::SCM::Git->new(); };
     if ($@) {
-        skip 'Git not available', 14;
+        skip 'Git not available', 16;
     }
 
     eval { $git->clone('invalid url', 'invalid') };
